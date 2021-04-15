@@ -5,7 +5,7 @@ Deployed with Google Cloud AppEngine
 
 # Use
  - [Graphql Playground](https://test-splitter.appspot.com/)
- - [API Endpoint](https://test-splitter.appspot.com/)
+ - [API Endpoint /query](https://test-splitter.appspot.com/query)
 
 
 # Install
