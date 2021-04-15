@@ -1,0 +1,48 @@
+input SpecFile {
+  tests: [String!]
+  filePath: String!
+}
+
+input SessionInput {
+  projectName: String!
+  specFiles: [SpecFile!]!
+}
+
+type SessionInfo {
+  projectName: String!
+  sessionId: String!
+}
+
+type Project {
+  projectName: String!
+  latestSession: String
+  sessions: [Session!]
+}
+
+type Session {
+  id: String!
+  start: Int! 
+  end: Int!
+  backlog: [Spec!]
+}
+
+type Spec {
+  file: String!
+  estimatedDuration: Int!
+	start: Int!
+	end: Int!
+}
+
+type Query {
+  nextSpec (sessionId: String!): String!
+  project (name: String!): Project!
+}
+
+type Mutation {
+  addSession (session: SessionInput!): SessionInfo!
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+}
