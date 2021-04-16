@@ -15,14 +15,10 @@ type SplitService struct {
 	Repository storage.Storage
 }
 
-func NewSplitService() (SplitService, error) {
-	srv := SplitService{}
-	repo, err := storage.NewInMemStorage()
-	if err != nil {
-		return srv, err
+func NewSplitService(repo storage.Storage) SplitService {
+	return SplitService{
+		Repository: repo,
 	}
-	srv.Repository = repo
-	return srv, nil
 }
 
 func (svc *SplitService) AddSession(projectName string, sessionID string, inputSpecs []entities.Spec) error {

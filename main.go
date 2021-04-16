@@ -11,6 +11,7 @@ import (
 	"github.com/Shelex/split-test/api/graph"
 	"github.com/Shelex/split-test/api/graph/generated"
 	"github.com/Shelex/split-test/domain"
+	"github.com/Shelex/split-test/storage"
 )
 
 const defaultPort = "8080"
@@ -38,7 +39,7 @@ func Start() error {
 		log.Printf("Defaulting to port %s", port)
 	}
 
-	svc, err := domain.NewSplitService()
+	svc, err := InitDomainService()
 
 	if err != nil {
 		log.Printf("failed to initiate service %s:\n", err)
@@ -59,4 +60,23 @@ func Start() error {
 		return err
 	}
 	return nil
+}
+
+func InitDomainService() (domain.SplitService, error) {
+	env := os.Getenv("ENV")
+
+	var repo storage.Storage
+	var err error
+
+	switch env {
+	case "dev":
+		repo, err = storage.NewInMemStorage()
+	default:
+		//TODO change to datastore
+		repo, err = storage.NewInMemStorage()
+	}
+	if err != nil {
+		return domain.SplitService{}, err
+	}
+	return domain.NewSplitService(repo), nil
 }
