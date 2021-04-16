@@ -30,7 +30,7 @@ type Spec struct {
 	EstimatedDuration int    `json:"estimatedDuration"`
 	Start             int    `json:"start"`
 	End               int    `json:"end"`
-	AssignedTo        string `json:"AssignedTo"`
+	AssignedTo        string `json:"assignedTo"`
 }
 
 type SpecFile struct {

@@ -21,7 +21,7 @@ type Project {
 
 type Session {
   id: String!
-  start: Int! 
+  start: Int!
   end: Int!
   backlog: [Spec!]
 }
@@ -29,18 +29,18 @@ type Session {
 type Spec {
   file: String!
   estimatedDuration: Int!
-	start: Int!
-	end: Int!
-  AssignedTo: String!
+  start: Int!
+  end: Int!
+  assignedTo: String!
 }
 
 type Query {
-  nextSpec (sessionId: String!, machineId: String): String!
-  project (name: String!): Project!
+  nextSpec(sessionId: String!, machineId: String): String!
+  project(name: String!): Project!
 }
 
 type Mutation {
-  addSession (session: SessionInput!): SessionInfo!
+  addSession(session: SessionInput!): SessionInfo!
 }
 
 schema {

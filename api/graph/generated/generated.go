@@ -201,7 +201,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SessionInfo.SessionID(childComplexity), true
 
-	case "Spec.AssignedTo":
+	case "Spec.assignedTo":
 		if e.complexity.Spec.AssignedTo == nil {
 			break
 		}
@@ -323,7 +323,7 @@ type Project {
 
 type Session {
   id: String!
-  start: Int! 
+  start: Int!
   end: Int!
   backlog: [Spec!]
 }
@@ -331,18 +331,18 @@ type Session {
 type Spec {
   file: String!
   estimatedDuration: Int!
-	start: Int!
-	end: Int!
-  AssignedTo: String!
+  start: Int!
+  end: Int!
+  assignedTo: String!
 }
 
 type Query {
-  nextSpec (sessionId: String!, machineId: String): String!
-  project (name: String!): Project!
+  nextSpec(sessionId: String!, machineId: String): String!
+  project(name: String!): Project!
 }
 
 type Mutation {
-  addSession (session: SessionInput!): SessionInfo!
+  addSession(session: SessionInput!): SessionInfo!
 }
 
 schema {
@@ -1107,7 +1107,7 @@ func (ec *executionContext) _Spec_end(ctx context.Context, field graphql.Collect
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Spec_AssignedTo(ctx context.Context, field graphql.CollectedField, obj *model.Spec) (ret graphql.Marshaler) {
+func (ec *executionContext) _Spec_assignedTo(ctx context.Context, field graphql.CollectedField, obj *model.Spec) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2515,8 +2515,8 @@ func (ec *executionContext) _Spec(ctx context.Context, sel ast.SelectionSet, obj
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "AssignedTo":
-			out.Values[i] = ec._Spec_AssignedTo(ctx, field, obj)
+		case "assignedTo":
+			out.Values[i] = ec._Spec_assignedTo(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
