@@ -34,7 +34,7 @@ type Spec {
 }
 
 type Query {
-  nextSpec (sessionId: String!): String!
+  nextSpec (sessionId: String!, machineId: String): String!
   project (name: String!): Project!
 }
 

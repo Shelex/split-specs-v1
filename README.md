@@ -45,7 +45,7 @@ Deployed with Google Cloud AppEngine
 }
  ```
 
- - query nextSpec(sessionID) - receive next spec file to run for specific session
+ - query nextSpec(sessionID, machineID?) - receive next spec file to run for specific session and possibly for specific machineID. In case only one machine is used - no need to pass it
 ```graphql
 query {
   nextSpec (sessionId: "3e1295e4-b044-4a7a-82a7-b0e71afe70e7")

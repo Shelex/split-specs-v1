@@ -110,7 +110,7 @@ func (i *InMem) GetSession(sessionID string) (entities.Session, error) {
 	return *session, nil
 }
 
-func (i *InMem) StartSpec(sessionID string, specName string) error {
+func (i *InMem) StartSpec(sessionID string, machineID string, specName string) error {
 	session, err := i.GetSession(sessionID)
 	if err != nil {
 		return err
@@ -122,21 +122,22 @@ func (i *InMem) StartSpec(sessionID string, specName string) error {
 				i.sessions[sessionID].Start = time.Now().Unix()
 			}
 			i.sessions[sessionID].Backlog[index].Start = time.Now().Unix()
-			log.Printf("started spec %s in session %s", spec.FilePath, sessionID)
+			i.sessions[sessionID].Backlog[index].AssignedTo = machineID
+			log.Printf("started spec %s in session %s for machine %s", spec.FilePath, sessionID, machineID)
 			return nil
 		}
 	}
 	return nil
 }
 
-func (i *InMem) EndRunningSpec(sessionID string) error {
+func (i *InMem) EndSpec(sessionID string, machineID string) error {
 	session, err := i.GetSession(sessionID)
 	if err != nil {
 		return err
 	}
 	for index, spec := range session.Backlog {
-		if spec.End == 0 && spec.Start != 0 {
-			log.Printf("finished spec %s in session %s", spec.FilePath, sessionID)
+		if spec.End == 0 && spec.Start != 0 && spec.AssignedTo == machineID {
+			log.Printf("finished spec %s in session %s for machine %s", spec.FilePath, sessionID, machineID)
 			backlogItem := i.sessions[sessionID].Backlog[index]
 			backlogItem.End = time.Now().Unix()
 			backlogItem.EstimatedDuration = backlogItem.End - backlogItem.Start

@@ -24,4 +24,5 @@ type Spec struct {
 	EstimatedDuration int64
 	Start             int64
 	End               int64
+	AssignedTo        string
 }

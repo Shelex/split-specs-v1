@@ -75,10 +75,10 @@ func (svc *SplitService) GetProject(name string) (entities.ProjectFull, error) {
 	return project, nil
 }
 
-func (svc *SplitService) Next(sessionID string) (string, error) {
-	log.Printf("requesting next spec in session %s", sessionID)
+func (svc *SplitService) Next(sessionID string, machineID string) (string, error) {
+	log.Printf("requesting next spec in session %s with machine %s", sessionID, machineID)
 
-	if err := svc.Repository.EndRunningSpec(sessionID); err != nil {
+	if err := svc.Repository.EndSpec(sessionID, machineID); err != nil {
 		return "", err
 	}
 
@@ -92,7 +92,7 @@ func (svc *SplitService) Next(sessionID string) (string, error) {
 
 	spec := svc.CalculateNext(session.Backlog)
 
-	log.Printf("got spec after CalculateNext to run %v\n", spec)
+	log.Printf("got spec after CalculateNext to run %v for machine %s\n", spec, machineID)
 
 	if spec.FilePath == "" {
 		if err := svc.Repository.EndSession(sessionID); err != nil {
@@ -101,7 +101,7 @@ func (svc *SplitService) Next(sessionID string) (string, error) {
 		return "", ErrSessionFinished
 	}
 
-	if err := svc.Repository.StartSpec(sessionID, spec.FilePath); err != nil {
+	if err := svc.Repository.StartSpec(sessionID, machineID, spec.FilePath); err != nil {
 		return "", err
 	}
 
@@ -110,9 +110,7 @@ func (svc *SplitService) Next(sessionID string) (string, error) {
 
 func (svc *SplitService) CalculateNext(specs []entities.Spec) entities.Spec {
 	log.Printf("calculating next spec from %v\n", specs)
-	specsToRun := getSpecsToRun(specs, func(spec entities.Spec) bool {
-		return spec.Start == 0
-	})
+	specsToRun := getSpecsToRun(specs)
 	log.Printf("got specs to run %v\n", specsToRun)
 
 	newSpec := getNewSpec(specsToRun)
@@ -137,10 +135,10 @@ func getLongestSpec(specs []entities.Spec) entities.Spec {
 	return longestSpec
 }
 
-func getSpecsToRun(specs []entities.Spec, iterator func(entities.Spec) bool) []entities.Spec {
+func getSpecsToRun(specs []entities.Spec) []entities.Spec {
 	filtered := make([]entities.Spec, 0)
 	for _, spec := range specs {
-		if iterator(spec) {
+		if spec.Start == 0 {
 			filtered = append(filtered, spec)
 		}
 	}

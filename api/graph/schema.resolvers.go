@@ -32,8 +32,13 @@ func (r *mutationResolver) AddSession(ctx context.Context, session model.Session
 	}, nil
 }
 
-func (r *queryResolver) NextSpec(ctx context.Context, sessionID string) (string, error) {
-	next, err := r.SplitService.Next(sessionID)
+func (r *queryResolver) NextSpec(ctx context.Context, sessionID string, machineID *string) (string, error) {
+	machine := "default"
+	if machineID != nil {
+		machine = *machineID
+	}
+
+	next, err := r.SplitService.Next(sessionID, machine)
 	if err != nil {
 		return "", err
 	}

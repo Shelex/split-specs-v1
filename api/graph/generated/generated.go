@@ -54,7 +54,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		NextSpec func(childComplexity int, sessionID string) int
+		NextSpec func(childComplexity int, sessionID string, machineID *string) int
 		Project  func(childComplexity int, name string) int
 	}
 
@@ -82,7 +82,7 @@ type MutationResolver interface {
 	AddSession(ctx context.Context, session model.SessionInput) (*model.SessionInfo, error)
 }
 type QueryResolver interface {
-	NextSpec(ctx context.Context, sessionID string) (string, error)
+	NextSpec(ctx context.Context, sessionID string, machineID *string) (string, error)
 	Project(ctx context.Context, name string) (*model.Project, error)
 }
 
@@ -144,7 +144,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.NextSpec(childComplexity, args["sessionId"].(string)), true
+		return e.complexity.Query.NextSpec(childComplexity, args["sessionId"].(string), args["machineId"].(*string)), true
 
 	case "Query.project":
 		if e.complexity.Query.Project == nil {
@@ -328,7 +328,7 @@ type Spec {
 }
 
 type Query {
-  nextSpec (sessionId: String!): String!
+  nextSpec (sessionId: String!, machineId: String): String!
   project (name: String!): Project!
 }
 
@@ -390,6 +390,15 @@ func (ec *executionContext) field_Query_nextSpec_args(ctx context.Context, rawAr
 		}
 	}
 	args["sessionId"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["machineId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("machineId"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["machineId"] = arg1
 	return args, nil
 }
 
@@ -612,7 +621,7 @@ func (ec *executionContext) _Query_nextSpec(ctx context.Context, field graphql.C
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().NextSpec(rctx, args["sessionId"].(string))
+		return ec.resolvers.Query().NextSpec(rctx, args["sessionId"].(string), args["machineId"].(*string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

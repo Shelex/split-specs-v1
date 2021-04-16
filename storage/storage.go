@@ -11,8 +11,8 @@ type Storage interface {
 	GetProjectLatestSession(projectName string) (*entities.Session, error)
 	SetProjectLatestSession(projectName string, sessionID string) error
 	GetFullProjectByName(name string) (entities.ProjectFull, error)
-	StartSpec(sessionID string, specName string) error
-	EndRunningSpec(sessionID string) error
+	StartSpec(sessionID string, machineID string, specName string) error
+	EndSpec(sessionID string, machineID string) error
 	GetSession(sessionID string) (entities.Session, error)
 	EndSession(sessionID string) error
 }

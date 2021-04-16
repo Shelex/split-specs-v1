@@ -47,10 +47,10 @@ func (d DataStore) SetProjectLatestSession(projectName string, sessionID string)
 func (d DataStore) GetFullProjectByName(name string) (entities.ProjectFull, error) {
 	return entities.ProjectFull{}, errors.New("not implemented")
 }
-func (d DataStore) StartSpec(sessionID string, specName string) error {
+func (d DataStore) StartSpec(sessionID string, machineID string, specName string) error {
 	return errors.New("not implemented")
 }
-func (d DataStore) EndRunningSpec(sessionID string) error {
+func (d DataStore) EndSpec(sessionID string, machineID string) error {
 	return errors.New("not implemented")
 }
 func (d DataStore) GetSession(sessionID string) (entities.Session, error) {
