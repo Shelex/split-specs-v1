@@ -53,5 +53,6 @@ func specToApiSpec(spec entities.Spec) *model.Spec {
 		EstimatedDuration: int(spec.EstimatedDuration),
 		Start:             int(spec.Start),
 		End:               int(spec.End),
+		AssignedTo:        spec.AssignedTo,
 	}
 }

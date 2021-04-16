@@ -71,6 +71,7 @@ type ComplexityRoot struct {
 	}
 
 	Spec struct {
+		AssignedTo        func(childComplexity int) int
 		End               func(childComplexity int) int
 		EstimatedDuration func(childComplexity int) int
 		File              func(childComplexity int) int
@@ -200,6 +201,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.SessionInfo.SessionID(childComplexity), true
 
+	case "Spec.AssignedTo":
+		if e.complexity.Spec.AssignedTo == nil {
+			break
+		}
+
+		return e.complexity.Spec.AssignedTo(childComplexity), true
+
 	case "Spec.end":
 		if e.complexity.Spec.End == nil {
 			break
@@ -325,6 +333,7 @@ type Spec {
   estimatedDuration: Int!
 	start: Int!
 	end: Int!
+  AssignedTo: String!
 }
 
 type Query {
@@ -1096,6 +1105,41 @@ func (ec *executionContext) _Spec_end(ctx context.Context, field graphql.Collect
 	res := resTmp.(int)
 	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Spec_AssignedTo(ctx context.Context, field graphql.CollectedField, obj *model.Spec) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Spec",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AssignedTo, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -2468,6 +2512,11 @@ func (ec *executionContext) _Spec(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "end":
 			out.Values[i] = ec._Spec_end(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "AssignedTo":
+			out.Values[i] = ec._Spec_AssignedTo(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
