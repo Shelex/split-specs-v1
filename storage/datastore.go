@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"cloud.google.com/go/datastore"
-	"github.com/Shelex/split-test/entities"
+	"github.com/Shelex/split-specs/entities"
 )
 
 type DataStore struct {

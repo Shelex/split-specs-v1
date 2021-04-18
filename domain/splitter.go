@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Shelex/split-test/entities"
-	"github.com/Shelex/split-test/storage"
+	"github.com/Shelex/split-specs/entities"
+	"github.com/Shelex/split-specs/storage"
 )
 
 var ErrSessionFinished = errors.New("session finished")

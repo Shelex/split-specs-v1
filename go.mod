@@ -1,4 +1,4 @@
-module github.com/Shelex/split-test
+module github.com/Shelex/split-specs
 
 go 1.15
 

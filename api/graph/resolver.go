@@ -1,7 +1,7 @@
 package graph
 
 import (
-	"github.com/Shelex/split-test/domain"
+	"github.com/Shelex/split-specs/domain"
 )
 
 // This file will not be regenerated automatically.

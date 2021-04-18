@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/Shelex/split-test/entities"
+	"github.com/Shelex/split-specs/entities"
 )
 
 type InMem struct {

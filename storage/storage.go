@@ -1,7 +1,7 @@
 package storage
 
 import (
-	"github.com/Shelex/split-test/entities"
+	"github.com/Shelex/split-specs/entities"
 )
 
 type Storage interface {

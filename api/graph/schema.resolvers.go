@@ -8,10 +8,10 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/Shelex/split-test/api/factory"
-	"github.com/Shelex/split-test/api/graph/generated"
-	"github.com/Shelex/split-test/api/graph/model"
-	"github.com/satori/go.uuid"
+	"github.com/Shelex/split-specs/api/factory"
+	"github.com/Shelex/split-specs/api/graph/generated"
+	"github.com/Shelex/split-specs/api/graph/model"
+	uuid "github.com/satori/go.uuid"
 )
 
 func (r *mutationResolver) AddSession(ctx context.Context, session model.SessionInput) (*model.SessionInfo, error) {

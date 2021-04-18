@@ -1,4 +1,4 @@
-NAME=split-test
+NAME=split-specs
 ROOT=github.com/Shelex/${NAME}
 GO111MODULE=on
 SHELL=/bin/bash

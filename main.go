@@ -8,10 +8,10 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/Shelex/split-test/api/graph"
-	"github.com/Shelex/split-test/api/graph/generated"
-	"github.com/Shelex/split-test/domain"
-	"github.com/Shelex/split-test/storage"
+	"github.com/Shelex/split-specs/api/graph"
+	"github.com/Shelex/split-specs/api/graph/generated"
+	"github.com/Shelex/split-specs/domain"
+	"github.com/Shelex/split-specs/storage"
 )
 
 const defaultPort = "8080"

@@ -1,8 +1,8 @@
 package factory
 
 import (
-	"github.com/Shelex/split-test/api/graph/model"
-	"github.com/Shelex/split-test/entities"
+	"github.com/Shelex/split-specs/api/graph/model"
+	"github.com/Shelex/split-specs/entities"
 )
 
 func SpecFilesToSpecs(files []*model.SpecFile) []entities.Spec {

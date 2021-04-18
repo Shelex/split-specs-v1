@@ -4,13 +4,13 @@ Could be used to make parallel machines that run your tests much equal in durati
 Deployed with Google Cloud AppEngine
 
 # Use
- - [Graphql Playground](https://test-splitter.appspot.com/)
- - [API Endpoint /query](https://test-splitter.appspot.com/query)
+ - [Graphql Playground](https://split-specs.appspot.com/)
+ - [API Endpoint /query](https://split-specs.appspot.com/query)
 
 
 # Install
  - clone this repository  
- - `cd split-test`  
+ - `cd split-specs`  
  - `make deps` - download dependencies
  - `make api` - build binary and execute  
  - open `http://localhost:8080/` for GraphQL playground or use Altair/Postman/Insomnia  
