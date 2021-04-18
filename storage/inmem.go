@@ -11,13 +11,30 @@ import (
 type InMem struct {
 	sessions map[string]*entities.Session
 	projects map[string]*entities.Project
+	users    map[string]*entities.User
 }
 
 func NewInMemStorage() (Storage, error) {
-	return &InMem{
+	DB = &InMem{
 		sessions: map[string]*entities.Session{},
 		projects: map[string]*entities.Project{},
-	}, nil
+		users:    map[string]*entities.User{},
+	}
+	return DB, nil
+}
+
+func (i *InMem) CreateUser(userInput entities.User) error {
+	i.users[userInput.ID] = &userInput
+	return nil
+}
+
+func (i *InMem) GetUserByUsername(username string) (*entities.User, error) {
+	for _, user := range i.users {
+		if user.Username == username {
+			return user, nil
+		}
+	}
+	return nil, fmt.Errorf("user not found")
 }
 
 func (i *InMem) AddProjectMaybe(projectName string) error {

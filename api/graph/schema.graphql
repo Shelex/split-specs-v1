@@ -1,3 +1,8 @@
+input User {
+  username: String!
+  password: String!
+}
+
 input SpecFile {
   tests: [String!]
   filePath: String!
@@ -41,6 +46,8 @@ type Query {
 
 type Mutation {
   addSession(session: SessionInput!): SessionInfo!
+  register(input: User!): String!
+  login(input: User!): String!
 }
 
 schema {

@@ -1,5 +1,11 @@
 package entities
 
+type User struct {
+	ID       string
+	Username string
+	Password string
+}
+
 type Session struct {
 	ID          string
 	ProjectName string

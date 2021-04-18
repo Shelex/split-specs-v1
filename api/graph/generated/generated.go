@@ -45,6 +45,8 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	Mutation struct {
 		AddSession func(childComplexity int, session model.SessionInput) int
+		Login      func(childComplexity int, input model.User) int
+		Register   func(childComplexity int, input model.User) int
 	}
 
 	Project struct {
@@ -81,6 +83,8 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	AddSession(ctx context.Context, session model.SessionInput) (*model.SessionInfo, error)
+	Register(ctx context.Context, input model.User) (string, error)
+	Login(ctx context.Context, input model.User) (string, error)
 }
 type QueryResolver interface {
 	NextSpec(ctx context.Context, sessionID string, machineID *string) (string, error)
@@ -113,6 +117,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddSession(childComplexity, args["session"].(model.SessionInput)), true
+
+	case "Mutation.login":
+		if e.complexity.Mutation.Login == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_login_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Login(childComplexity, args["input"].(model.User)), true
+
+	case "Mutation.register":
+		if e.complexity.Mutation.Register == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_register_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.Register(childComplexity, args["input"].(model.User)), true
 
 	case "Project.latestSession":
 		if e.complexity.Project.LatestSession == nil {
@@ -300,7 +328,12 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "graph/schema.graphql", Input: `input SpecFile {
+	{Name: "graph/schema.graphql", Input: `input User {
+  username: String!
+  password: String!
+}
+
+input SpecFile {
   tests: [String!]
   filePath: String!
 }
@@ -343,6 +376,8 @@ type Query {
 
 type Mutation {
   addSession(session: SessionInput!): SessionInfo!
+  register(input: User!): String!
+  login(input: User!): String!
 }
 
 schema {
@@ -363,12 +398,42 @@ func (ec *executionContext) field_Mutation_addSession_args(ctx context.Context, 
 	var arg0 model.SessionInput
 	if tmp, ok := rawArgs["session"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("session"))
-		arg0, err = ec.unmarshalNSessionInput2githubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSessionInput(ctx, tmp)
+		arg0, err = ec.unmarshalNSessionInput2githubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSessionInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
 	args["session"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.User
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUser2githubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐUser(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_register_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.User
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNUser2githubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐUser(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -503,7 +568,91 @@ func (ec *executionContext) _Mutation_addSession(ctx context.Context, field grap
 	}
 	res := resTmp.(*model.SessionInfo)
 	fc.Result = res
-	return ec.marshalNSessionInfo2ᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSessionInfo(ctx, field.Selections, res)
+	return ec.marshalNSessionInfo2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSessionInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_register(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_register_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().Register(rctx, args["input"].(model.User))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_login(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_login_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().Login(rctx, args["input"].(model.User))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Project_projectName(ctx context.Context, field graphql.CollectedField, obj *model.Project) (ret graphql.Marshaler) {
@@ -602,7 +751,7 @@ func (ec *executionContext) _Project_sessions(ctx context.Context, field graphql
 	}
 	res := resTmp.([]*model.Session)
 	fc.Result = res
-	return ec.marshalOSession2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSessionᚄ(ctx, field.Selections, res)
+	return ec.marshalOSession2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSessionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_nextSpec(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -686,7 +835,7 @@ func (ec *executionContext) _Query_project(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(*model.Project)
 	fc.Result = res
-	return ec.marshalNProject2ᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐProject(ctx, field.Selections, res)
+	return ec.marshalNProject2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐProject(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -894,7 +1043,7 @@ func (ec *executionContext) _Session_backlog(ctx context.Context, field graphql.
 	}
 	res := resTmp.([]*model.Spec)
 	fc.Result = res
-	return ec.marshalOSpec2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSpecᚄ(ctx, field.Selections, res)
+	return ec.marshalOSpec2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSpecᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _SessionInfo_projectName(ctx context.Context, field graphql.CollectedField, obj *model.SessionInfo) (ret graphql.Marshaler) {
@@ -2247,7 +2396,7 @@ func (ec *executionContext) unmarshalInputSessionInput(ctx context.Context, obj 
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("specFiles"))
-			it.SpecFiles, err = ec.unmarshalNSpecFile2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSpecFileᚄ(ctx, v)
+			it.SpecFiles, err = ec.unmarshalNSpecFile2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSpecFileᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2285,6 +2434,34 @@ func (ec *executionContext) unmarshalInputSpecFile(ctx context.Context, obj inte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUser(ctx context.Context, obj interface{}) (model.User, error) {
+	var it model.User
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "username":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+			it.Username, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "password":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			it.Password, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -2310,6 +2487,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = graphql.MarshalString("Mutation")
 		case "addSession":
 			out.Values[i] = ec._Mutation_addSession(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "register":
+			out.Values[i] = ec._Mutation_register(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "login":
+			out.Values[i] = ec._Mutation_login(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2806,11 +2993,11 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 	return res
 }
 
-func (ec *executionContext) marshalNProject2githubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐProject(ctx context.Context, sel ast.SelectionSet, v model.Project) graphql.Marshaler {
+func (ec *executionContext) marshalNProject2githubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐProject(ctx context.Context, sel ast.SelectionSet, v model.Project) graphql.Marshaler {
 	return ec._Project(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNProject2ᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐProject(ctx context.Context, sel ast.SelectionSet, v *model.Project) graphql.Marshaler {
+func (ec *executionContext) marshalNProject2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐProject(ctx context.Context, sel ast.SelectionSet, v *model.Project) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2820,7 +3007,7 @@ func (ec *executionContext) marshalNProject2ᚖgithubᚗcomᚋShelexᚋsplitᚑt
 	return ec._Project(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSession2ᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSession(ctx context.Context, sel ast.SelectionSet, v *model.Session) graphql.Marshaler {
+func (ec *executionContext) marshalNSession2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSession(ctx context.Context, sel ast.SelectionSet, v *model.Session) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2830,11 +3017,11 @@ func (ec *executionContext) marshalNSession2ᚖgithubᚗcomᚋShelexᚋsplitᚑt
 	return ec._Session(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNSessionInfo2githubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSessionInfo(ctx context.Context, sel ast.SelectionSet, v model.SessionInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNSessionInfo2githubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSessionInfo(ctx context.Context, sel ast.SelectionSet, v model.SessionInfo) graphql.Marshaler {
 	return ec._SessionInfo(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNSessionInfo2ᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSessionInfo(ctx context.Context, sel ast.SelectionSet, v *model.SessionInfo) graphql.Marshaler {
+func (ec *executionContext) marshalNSessionInfo2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSessionInfo(ctx context.Context, sel ast.SelectionSet, v *model.SessionInfo) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2844,12 +3031,12 @@ func (ec *executionContext) marshalNSessionInfo2ᚖgithubᚗcomᚋShelexᚋsplit
 	return ec._SessionInfo(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSessionInput2githubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSessionInput(ctx context.Context, v interface{}) (model.SessionInput, error) {
+func (ec *executionContext) unmarshalNSessionInput2githubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSessionInput(ctx context.Context, v interface{}) (model.SessionInput, error) {
 	res, err := ec.unmarshalInputSessionInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNSpec2ᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSpec(ctx context.Context, sel ast.SelectionSet, v *model.Spec) graphql.Marshaler {
+func (ec *executionContext) marshalNSpec2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSpec(ctx context.Context, sel ast.SelectionSet, v *model.Spec) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -2859,7 +3046,7 @@ func (ec *executionContext) marshalNSpec2ᚖgithubᚗcomᚋShelexᚋsplitᚑtest
 	return ec._Spec(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNSpecFile2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSpecFileᚄ(ctx context.Context, v interface{}) ([]*model.SpecFile, error) {
+func (ec *executionContext) unmarshalNSpecFile2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSpecFileᚄ(ctx context.Context, v interface{}) ([]*model.SpecFile, error) {
 	var vSlice []interface{}
 	if v != nil {
 		if tmp1, ok := v.([]interface{}); ok {
@@ -2872,7 +3059,7 @@ func (ec *executionContext) unmarshalNSpecFile2ᚕᚖgithubᚗcomᚋShelexᚋspl
 	res := make([]*model.SpecFile, len(vSlice))
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNSpecFile2ᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSpecFile(ctx, vSlice[i])
+		res[i], err = ec.unmarshalNSpecFile2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSpecFile(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}
@@ -2880,7 +3067,7 @@ func (ec *executionContext) unmarshalNSpecFile2ᚕᚖgithubᚗcomᚋShelexᚋspl
 	return res, nil
 }
 
-func (ec *executionContext) unmarshalNSpecFile2ᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSpecFile(ctx context.Context, v interface{}) (*model.SpecFile, error) {
+func (ec *executionContext) unmarshalNSpecFile2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSpecFile(ctx context.Context, v interface{}) (*model.SpecFile, error) {
 	res, err := ec.unmarshalInputSpecFile(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
@@ -2898,6 +3085,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNUser2githubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐUser(ctx context.Context, v interface{}) (model.User, error) {
+	res, err := ec.unmarshalInputUser(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -3153,7 +3345,7 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return graphql.MarshalBoolean(*v)
 }
 
-func (ec *executionContext) marshalOSession2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSessionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Session) graphql.Marshaler {
+func (ec *executionContext) marshalOSession2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSessionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Session) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -3180,7 +3372,7 @@ func (ec *executionContext) marshalOSession2ᚕᚖgithubᚗcomᚋShelexᚋsplit�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSession2ᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSession(ctx, sel, v[i])
+			ret[i] = ec.marshalNSession2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSession(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -3193,7 +3385,7 @@ func (ec *executionContext) marshalOSession2ᚕᚖgithubᚗcomᚋShelexᚋsplit�
 	return ret
 }
 
-func (ec *executionContext) marshalOSpec2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSpecᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Spec) graphql.Marshaler {
+func (ec *executionContext) marshalOSpec2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSpecᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Spec) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
@@ -3220,7 +3412,7 @@ func (ec *executionContext) marshalOSpec2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑt
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNSpec2ᚖgithubᚗcomᚋShelexᚋsplitᚑtestᚋapiᚋgraphᚋmodelᚐSpec(ctx, sel, v[i])
+			ret[i] = ec.marshalNSpec2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSpec(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

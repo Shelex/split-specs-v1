@@ -37,3 +37,8 @@ type SpecFile struct {
 	Tests    []string `json:"tests"`
 	FilePath string   `json:"filePath"`
 }
+
+type User struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}

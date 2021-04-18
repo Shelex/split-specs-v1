@@ -5,18 +5,20 @@ package graph
 
 import (
 	"context"
-	"encoding/json"
-	"log"
 
 	"github.com/Shelex/split-specs/api/factory"
 	"github.com/Shelex/split-specs/api/graph/generated"
 	"github.com/Shelex/split-specs/api/graph/model"
+	"github.com/Shelex/split-specs/internal/auth"
+	"github.com/Shelex/split-specs/internal/users"
+	"github.com/Shelex/split-specs/pkg/jwt"
 	uuid "github.com/satori/go.uuid"
 )
 
 func (r *mutationResolver) AddSession(ctx context.Context, session model.SessionInput) (*model.SessionInfo, error) {
-	jsonized, _ := json.Marshal(session)
-	log.Println(string(jsonized))
+	if user := auth.ForContext(ctx); user == nil {
+		return nil, &users.AccessDeniedError{}
+	}
 
 	id := uuid.NewV4().String()
 
@@ -32,7 +34,50 @@ func (r *mutationResolver) AddSession(ctx context.Context, session model.Session
 	}, nil
 }
 
+func (r *mutationResolver) Register(ctx context.Context, input model.User) (string, error) {
+	if input.Username == "" || input.Password == "" {
+		return "", &users.InvalidUsernameOrPassordError{}
+	}
+
+	user := users.User{
+		Username: input.Username,
+		Password: input.Password,
+		ID:       uuid.NewV4().String(),
+	}
+
+	if user.Exist() {
+		return "", &users.WrongUsernameOrPasswordError{}
+	}
+	if err := user.Create(); err != nil {
+		return "", err
+	}
+
+	token, err := jwt.GenerateToken(user)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func (r *mutationResolver) Login(ctx context.Context, input model.User) (string, error) {
+	var user users.User
+	user.Username = input.Username
+	user.Password = input.Password
+	correct := user.Authenticate()
+	if !correct {
+		return "", &users.WrongUsernameOrPasswordError{}
+	}
+	token, err := jwt.GenerateToken(user)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
 func (r *queryResolver) NextSpec(ctx context.Context, sessionID string, machineID *string) (string, error) {
+	if user := auth.ForContext(ctx); user == nil {
+		return "", &users.AccessDeniedError{}
+	}
 	machine := "default"
 	if machineID != nil {
 		machine = *machineID
@@ -46,6 +91,9 @@ func (r *queryResolver) NextSpec(ctx context.Context, sessionID string, machineI
 }
 
 func (r *queryResolver) Project(ctx context.Context, name string) (*model.Project, error) {
+	if user := auth.ForContext(ctx); user == nil {
+		return nil, &users.AccessDeniedError{}
+	}
 	project, err := r.SplitService.GetProject(name)
 	if err != nil {
 		return nil, err

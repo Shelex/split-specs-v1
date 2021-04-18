@@ -26,6 +26,8 @@ func NewDataStore() (Storage, error) {
 
 	store.Client = client
 
+	DB = store
+
 	return store, nil
 }
 
@@ -58,4 +60,12 @@ func (d DataStore) GetSession(sessionID string) (entities.Session, error) {
 }
 func (d DataStore) EndSession(sessionID string) error {
 	return errors.New("not implemented")
+}
+
+func (d DataStore) CreateUser(entities.User) error {
+	return errors.New("not implemented")
+}
+
+func (d DataStore) GetUserByUsername(username string) (*entities.User, error) {
+	return nil, errors.New("not implemented")
 }

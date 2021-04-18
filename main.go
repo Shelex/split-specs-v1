@@ -11,7 +11,10 @@ import (
 	"github.com/Shelex/split-specs/api/graph"
 	"github.com/Shelex/split-specs/api/graph/generated"
 	"github.com/Shelex/split-specs/domain"
+	"github.com/Shelex/split-specs/internal/auth"
 	"github.com/Shelex/split-specs/storage"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 )
 
 const defaultPort = "8080"
@@ -39,30 +42,33 @@ func Start() error {
 		log.Printf("Defaulting to port %s", port)
 	}
 
-	svc, err := InitDomainService()
-
+	db, err := InitDb()
 	if err != nil {
-		log.Printf("failed to initiate service %s:\n", err)
-		return err
+		return fmt.Errorf("failed to initialize db: %s", err)
 	}
+
+	svc := domain.NewSplitService(db)
+
+	router := chi.NewRouter()
+	router.Use(auth.Middleware(), middleware.Logger)
 
 	gql := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
 		Resolvers: graph.NewResolver(svc),
 	}))
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", gql)
+	router.Handle("/query", (gql))
+	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 
 	startMessage(port)
 
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	if err := http.ListenAndServe(":"+port, router); err != nil {
 		log.Printf("error %s:\n", err)
 		return err
 	}
 	return nil
 }
 
-func InitDomainService() (domain.SplitService, error) {
+func InitDb() (storage.Storage, error) {
 	env := os.Getenv("ENV")
 
 	var repo storage.Storage
@@ -76,7 +82,8 @@ func InitDomainService() (domain.SplitService, error) {
 		repo, err = storage.NewInMemStorage()
 	}
 	if err != nil {
-		return domain.SplitService{}, err
+		return nil, err
 	}
-	return domain.NewSplitService(repo), nil
+
+	return repo, nil
 }

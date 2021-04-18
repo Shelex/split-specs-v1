@@ -16,5 +16,4 @@ func NewResolver(svc domain.SplitService) *Resolver {
 	return &Resolver{
 		SplitService: svc,
 	}
-
 }
