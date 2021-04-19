@@ -83,6 +83,17 @@ func (r *mutationResolver) Login(ctx context.Context, input model.User) (string,
 	return token, nil
 }
 
+func (r *mutationResolver) InviteUser(ctx context.Context, username string, projectName string) (string, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return "", &users.AccessDeniedError{}
+	}
+	if err := r.SplitService.InviteUserToProject(users.UserToEntityUser(*user), username, projectName); err != nil {
+		return "", err
+	}
+	return "invited " + username, nil
+}
+
 func (r *queryResolver) NextSpec(ctx context.Context, sessionID string, machineID *string) (string, error) {
 	if user := auth.ForContext(ctx); user == nil {
 		return "", &users.AccessDeniedError{}
@@ -130,6 +141,14 @@ func (r *queryResolver) Project(ctx context.Context, name string) (*model.Projec
 		LatestSession: &project.LatestSession,
 		Sessions:      sessions,
 	}, nil
+}
+
+func (r *queryResolver) Projects(ctx context.Context) ([]string, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return nil, &users.AccessDeniedError{}
+	}
+	return r.SplitService.GetProjectList(users.UserToEntityUser(*user))
 }
 
 // Mutation returns generated.MutationResolver implementation.

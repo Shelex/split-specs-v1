@@ -36,6 +36,10 @@ func (i *InMem) GetUserByUsername(username string) (*entities.User, error) {
 	return nil, fmt.Errorf("user not found")
 }
 
+func (i *InMem) GetUserProjects(userID string) ([]string, error) {
+	return i.users[userID].ProjectIDs, nil
+}
+
 func (i *InMem) GetUserProjectIDByName(userID string, projectName string) (string, error) {
 	user, ok := i.users[userID]
 	if !ok {

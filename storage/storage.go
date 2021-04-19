@@ -12,6 +12,7 @@ type Storage interface {
 	GetProjectByID(ID string) (*entities.Project, error)
 	GetFullProjectByName(name string) (entities.ProjectFull, error)
 	GetUserProjectIDByName(userID string, projectName string) (string, error)
+	GetUserProjects(userID string) ([]string, error)
 
 	CreateProject(project entities.Project) error
 	AttachProjectToUser(userID string, projectID string) error

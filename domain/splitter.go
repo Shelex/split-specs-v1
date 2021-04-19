@@ -69,6 +69,24 @@ func (svc *SplitService) AddProject(userID string, projectName string) (string, 
 	return id, nil
 }
 
+func (svc *SplitService) InviteUserToProject(user entities.User, guest string, projectName string) error {
+	projectID, err := svc.Repository.GetUserProjectIDByName(user.ID, projectName)
+	if err != nil {
+		return err
+	}
+
+	guestUser, err := svc.Repository.GetUserByUsername(guest)
+	if err != nil {
+		return err
+	}
+
+	if _, err := svc.Repository.GetUserProjectIDByName(guestUser.ID, projectName); err != nil {
+		return fmt.Errorf("user already has project with such name")
+	}
+
+	return svc.Repository.AttachProjectToUser(guestUser.ID, projectID)
+}
+
 func (svc *SplitService) EstimateDuration(projectID string, specs []entities.Spec) []entities.Spec {
 	latestSession, err := svc.Repository.GetProjectLatestSession(projectID)
 	if err != nil {
@@ -95,6 +113,24 @@ func (svc *SplitService) GetProject(name string) (entities.ProjectFull, error) {
 	}
 
 	return project, nil
+}
+
+func (svc *SplitService) GetProjectList(user entities.User) ([]string, error) {
+	projectIds, err := svc.Repository.GetUserProjects(user.ID)
+	if err != nil {
+		return []string{}, err
+	}
+
+	projects := make([]string, len(projectIds))
+
+	for index, id := range projectIds {
+		project, err := svc.Repository.GetProjectByID(id)
+		if err != nil {
+			return []string{}, err
+		}
+		projects[index] = project.Name
+	}
+	return projects, nil
 }
 
 func (svc *SplitService) Next(sessionID string, machineID string) (string, error) {

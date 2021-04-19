@@ -42,12 +42,14 @@ type Spec {
 type Query {
   nextSpec(sessionId: String!, machineId: String): String!
   project(name: String!): Project!
+  projects: [String!]!
 }
 
 type Mutation {
   addSession(session: SessionInput!): SessionInfo!
   register(input: User!): String!
   login(input: User!): String!
+  inviteUser(username: String!, projectName: String!): String!
 }
 
 schema {

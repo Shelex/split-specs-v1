@@ -21,8 +21,27 @@ Deployed with Google Cloud AppEngine
  - `make browse` - open deployed app in local browser
 
 # Client options
+  - mutation register - create new user and receive jwt token
+```graphql
+mutation{
+  register(input: {
+    username: "admin",
+    password: "admin"
+  })
+}
+ ```
 
- - mutation addSession(session) - initialize new session for your project and receive sessionId
+   - mutation login - receive jwt token for existing user
+```graphql
+mutation{
+  login(input: {
+    username: "admin",
+    password: "admin"
+  })
+}
+ ```
+
+ - mutation addSession(session) - initialize new session for your project (session will be attached to existing project or create a new one) and receive sessionId
 ```graphql
  mutation {
   addSession (session:{
@@ -45,20 +64,20 @@ Deployed with Google Cloud AppEngine
 }
  ```
 
- - query nextSpec(sessionID, machineID?) - receive next spec file to run for specific session and possibly for specific machineID. In case only one machine is used - no need to pass it
+ - query nextSpec(sessionID, machineID?) - receive next spec file to run for specific session and for specific machineID. In case only one machine is used - no need to pass it
 ```graphql
 query {
   nextSpec (sessionId: "3e1295e4-b044-4a7a-82a7-b0e71afe70e7")
 }
  ```
 
-  - query project(name): get your project and sessions info
-```
-query {
-  project(name:"test") {
+  - query project(name): get your project and all sessions info
+```graphql
+query{
+  project(name: "test"){
     projectName
     latestSession
-    sessions{
+    sessions {
       id
       start
       end
@@ -73,6 +92,19 @@ query {
 }
 ```
 
+  - query projects: get list of project names available for current user
+```graphql
+query{
+  projects
+}
+```
+
+  - mutation inviteUser: make your project available for other existing user
+```graphql
+mutation{
+  inviteUser(username: "admin2", projectName: "test")
+}
+```
 
  # TODO
   - :x: implement persistance layer with firestore in datastore mode

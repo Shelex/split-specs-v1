@@ -81,3 +81,7 @@ func (d DataStore) GetProjectByID(ID string) (*entities.Project, error) {
 func (d DataStore) AttachProjectToUser(userID string, projectID string) error {
 	return errors.New("not implemented")
 }
+
+func (d DataStore) GetUserProjects(userID string) ([]string, error) {
+	return []string{}, errors.New("not implemented")
+}
