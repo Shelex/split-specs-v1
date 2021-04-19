@@ -1,6 +1,6 @@
+keys
 coverage.out
 *.pem
-storage/documents/local
 cmd
 .vscode
 .DS_Store
