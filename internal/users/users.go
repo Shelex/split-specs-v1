@@ -40,6 +40,21 @@ func (user *User) Exist() bool {
 	return true
 }
 
+func (user *User) ChangePassword(password string, newPassword string) error {
+	dbUser, err := storage.DB.GetUserByUsername(user.Username)
+	if err != nil {
+		return &AccessDeniedError{}
+	}
+	if match := CheckPasswordHash(password, dbUser.Password); !match {
+		return &AccessDeniedError{}
+	}
+	hashedPassword, err := HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+	return storage.DB.UpdatePassword(user.ID, hashedPassword)
+}
+
 //HashPassword hashes given password
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)

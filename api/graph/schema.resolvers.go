@@ -83,7 +83,20 @@ func (r *mutationResolver) Login(ctx context.Context, input model.User) (string,
 	return token, nil
 }
 
-func (r *mutationResolver) InviteUser(ctx context.Context, username string, projectName string) (string, error) {
+func (r *mutationResolver) ChangePassword(ctx context.Context, input model.ChangePasswordInput) (string, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return "", &users.AccessDeniedError{}
+	}
+
+	if err := user.ChangePassword(input.Password, input.NewPassword); err != nil {
+		return "", err
+	}
+
+	return "password changed", nil
+}
+
+func (r *mutationResolver) ShareProject(ctx context.Context, username string, projectName string) (string, error) {
 	user := auth.ForContext(ctx)
 	if user == nil {
 		return "", &users.AccessDeniedError{}
@@ -91,7 +104,7 @@ func (r *mutationResolver) InviteUser(ctx context.Context, username string, proj
 	if err := r.SplitService.InviteUserToProject(users.UserToEntityUser(*user), username, projectName); err != nil {
 		return "", err
 	}
-	return "invited " + username, nil
+	return "shared project " + projectName + " with " + username, nil
 }
 
 func (r *queryResolver) NextSpec(ctx context.Context, sessionID string, machineID *string) (string, error) {

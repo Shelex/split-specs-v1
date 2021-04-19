@@ -3,6 +3,11 @@ input User {
   password: String!
 }
 
+input ChangePasswordInput {
+  password: String!
+  newPassword: String!
+}
+
 input SpecFile {
   tests: [String!]
   filePath: String!
@@ -49,7 +54,8 @@ type Mutation {
   addSession(session: SessionInput!): SessionInfo!
   register(input: User!): String!
   login(input: User!): String!
-  inviteUser(username: String!, projectName: String!): String!
+  changePassword(input: ChangePasswordInput!): String!
+  shareProject(username: String!, projectName: String!): String!
 }
 
 schema {

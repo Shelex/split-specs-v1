@@ -31,6 +31,7 @@ type Storage interface {
 	//auth
 	CreateUser(user entities.User) error
 	GetUserByUsername(username string) (*entities.User, error)
+	UpdatePassword(userID string, newPassword string) error
 }
 
 var ErrProjectNotFound = errors.New("project not found")

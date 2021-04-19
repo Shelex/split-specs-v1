@@ -72,12 +72,12 @@ func (svc *SplitService) AddProject(userID string, projectName string) (string, 
 func (svc *SplitService) InviteUserToProject(user entities.User, guest string, projectName string) error {
 	projectID, err := svc.Repository.GetUserProjectIDByName(user.ID, projectName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to share project")
 	}
 
 	guestUser, err := svc.Repository.GetUserByUsername(guest)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to share project")
 	}
 
 	if _, err := svc.Repository.GetUserProjectIDByName(guestUser.ID, projectName); err != nil {

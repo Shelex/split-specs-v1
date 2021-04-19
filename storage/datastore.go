@@ -85,3 +85,7 @@ func (d DataStore) AttachProjectToUser(userID string, projectID string) error {
 func (d DataStore) GetUserProjects(userID string) ([]string, error) {
 	return []string{}, errors.New("not implemented")
 }
+
+func (d DataStore) UpdatePassword(userID string, newPassword string) error {
+	return errors.New("not implemented")
+}

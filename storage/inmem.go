@@ -27,6 +27,11 @@ func (i *InMem) CreateUser(userInput entities.User) error {
 	return nil
 }
 
+func (i *InMem) UpdatePassword(userID string, newPassword string) error {
+	i.users[userID].Password = newPassword
+	return nil
+}
+
 func (i *InMem) GetUserByUsername(username string) (*entities.User, error) {
 	for _, user := range i.users {
 		if user.Username == username {

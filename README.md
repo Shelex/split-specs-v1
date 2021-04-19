@@ -99,11 +99,22 @@ query{
 }
 ```
 
-  - mutation inviteUser: make your project available for other existing user
+  - mutation shareProject: make your project available for other existing user
 ```graphql
 mutation{
   inviteUser(username: "admin2", projectName: "test")
 }
+```
+
+  - mutation changePassword: change password for signed in user
+```graphql
+mutation{
+  changePassword(input: {
+    password: "admin",
+    newPassword: "ababagalamaga"
+  })
+} 
+
 ```
 
  # TODO

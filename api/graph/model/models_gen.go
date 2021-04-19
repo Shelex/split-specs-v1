@@ -2,6 +2,11 @@
 
 package model
 
+type ChangePasswordInput struct {
+	Password    string `json:"password"`
+	NewPassword string `json:"newPassword"`
+}
+
 type Project struct {
 	ProjectName   string     `json:"projectName"`
 	LatestSession *string    `json:"latestSession"`
