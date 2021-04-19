@@ -31,10 +31,10 @@ func NewDataStore() (Storage, error) {
 	return store, nil
 }
 
-func (d DataStore) AddProjectMaybe(projectName string) error {
+func (d DataStore) CreateProject(project entities.Project) error {
 	return errors.New("not implemented")
 }
-func (d DataStore) AddSession(projectName string, sessionID string, specs []entities.Spec) (*entities.Session, error) {
+func (d DataStore) CreateSession(projectName string, sessionID string, specs []entities.Spec) (*entities.Session, error) {
 	return nil, errors.New("not implemented")
 }
 func (d DataStore) AttachSessionToProject(projectName string, sessionID string) error {
@@ -68,4 +68,16 @@ func (d DataStore) CreateUser(entities.User) error {
 
 func (d DataStore) GetUserByUsername(username string) (*entities.User, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (d DataStore) GetUserProjectIDByName(userID string, projectName string) (string, error) {
+	return "", errors.New("not implemented")
+}
+
+func (d DataStore) GetProjectByID(ID string) (*entities.Project, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (d DataStore) AttachProjectToUser(userID string, projectID string) error {
+	return errors.New("not implemented")
 }

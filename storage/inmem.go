@@ -2,7 +2,6 @@ package storage
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/Shelex/split-specs/entities"
@@ -37,63 +36,85 @@ func (i *InMem) GetUserByUsername(username string) (*entities.User, error) {
 	return nil, fmt.Errorf("user not found")
 }
 
-func (i *InMem) AddProjectMaybe(projectName string) error {
-	_, ok := i.projects[projectName]
-	if ok {
-		return nil
+func (i *InMem) GetUserProjectIDByName(userID string, projectName string) (string, error) {
+	user, ok := i.users[userID]
+	if !ok {
+		return "", fmt.Errorf("user not found")
 	}
-	i.projects[projectName] = &entities.Project{}
+	for _, ID := range user.ProjectIDs {
+		project, err := i.GetProjectByID(ID)
+		if err == nil && project.Name == projectName {
+			return project.ID, nil
+		}
+	}
+	return "", ErrProjectNotFound
+}
+
+func (i *InMem) GetProjectByID(ID string) (*entities.Project, error) {
+	project, ok := i.projects[ID]
+	if !ok {
+		return nil, ErrProjectNotFound
+	}
+	return project, nil
+}
+
+func (i *InMem) CreateProject(project entities.Project) error {
+	i.projects[project.ID] = &project
 	return nil
 }
 
-func (i *InMem) AddSession(projectName string, sessionID string, specs []entities.Spec) (*entities.Session, error) {
+func (i *InMem) AttachProjectToUser(userID string, projectID string) error {
+	i.users[userID].ProjectIDs = append(i.users[userID].ProjectIDs, projectID)
+	return nil
+}
+
+func (i *InMem) CreateSession(projectID string, sessionID string, specs []entities.Spec) (*entities.Session, error) {
 	if sessionID == "" {
 		return nil, fmt.Errorf("[repository]: session id cannot be empty")
 	}
 
 	if _, ok := i.sessions[sessionID]; ok {
-		return nil, fmt.Errorf("[repository]: session id already in use for project %s", projectName)
+		return nil, fmt.Errorf("[repository]: session id already in use for project %s", projectID)
 	}
 
 	session := &entities.Session{
-		ID:          sessionID,
-		Backlog:     specs,
-		ProjectName: projectName,
+		ID:        sessionID,
+		Backlog:   specs,
+		ProjectID: projectID,
 	}
 
 	i.sessions[sessionID] = session
-	log.Printf("created session %s with %d specs\n", sessionID, len(specs))
 	return session, nil
 }
 
-func (i *InMem) AttachSessionToProject(projectName string, sessionID string) error {
-	if _, ok := i.projects[projectName]; !ok {
-		return fmt.Errorf("[repository]: project %s not found", projectName)
+func (i *InMem) AttachSessionToProject(projectID string, sessionID string) error {
+	if _, ok := i.projects[projectID]; !ok {
+		return ErrProjectNotFound
 	}
-	i.projects[projectName].Sessions = append(i.projects[projectName].Sessions, sessionID)
+	i.projects[projectID].SessionIDs = append(i.projects[projectID].SessionIDs, sessionID)
 	return nil
 }
 
-func (i *InMem) GetProjectLatestSession(projectName string) (*entities.Session, error) {
-	project, ok := i.projects[projectName]
+func (i *InMem) GetProjectLatestSession(projectID string) (*entities.Session, error) {
+	project, ok := i.projects[projectID]
 	if !ok {
-		return nil, fmt.Errorf("[repository]: project %s not found", projectName)
+		return nil, ErrProjectNotFound
 	}
 
 	latestSession, ok := i.sessions[project.LatestSession]
 	if !ok {
-		return nil, fmt.Errorf("[repository]: latest session for project %s not found", projectName)
+		return nil, fmt.Errorf("latest session for project %s not found", projectID)
 	}
 
 	return latestSession, nil
 }
 
-func (i *InMem) SetProjectLatestSession(projectName string, sessionID string) error {
-	_, ok := i.projects[projectName]
+func (i *InMem) SetProjectLatestSession(projectID string, sessionID string) error {
+	_, ok := i.projects[projectID]
 	if !ok {
-		return fmt.Errorf("[repository]: project %s not found", projectName)
+		return ErrProjectNotFound
 	}
-	i.projects[projectName].LatestSession = sessionID
+	i.projects[projectID].LatestSession = sessionID
 	return nil
 }
 
@@ -102,15 +123,15 @@ func (i *InMem) GetFullProjectByName(name string) (entities.ProjectFull, error) 
 
 	project, ok := i.projects[name]
 	if !ok {
-		return fullProject, fmt.Errorf("[repository]: project %s not found", name)
+		return fullProject, ErrProjectNotFound
 	}
 
 	fullProject.LatestSession = project.LatestSession
 
-	for _, sessionID := range project.Sessions {
+	for _, sessionID := range project.SessionIDs {
 		session, err := i.GetSession(sessionID)
 		if err != nil {
-			return fullProject, fmt.Errorf("[repository]: session %s not found for %s project", sessionID, name)
+			return fullProject, fmt.Errorf("session %s not found for %s project", sessionID, name)
 		}
 		fullProject.Sessions = append(fullProject.Sessions, session)
 	}
@@ -121,7 +142,7 @@ func (i *InMem) GetSession(sessionID string) (entities.Session, error) {
 	var empty entities.Session
 	session, ok := i.sessions[sessionID]
 	if !ok {
-		return empty, fmt.Errorf("[repository]: session %s not found", sessionID)
+		return empty, fmt.Errorf("session %s not found", sessionID)
 
 	}
 	return *session, nil
@@ -140,7 +161,6 @@ func (i *InMem) StartSpec(sessionID string, machineID string, specName string) e
 			}
 			i.sessions[sessionID].Backlog[index].Start = time.Now().Unix()
 			i.sessions[sessionID].Backlog[index].AssignedTo = machineID
-			log.Printf("started spec %s in session %s for machine %s", spec.FilePath, sessionID, machineID)
 			return nil
 		}
 	}
@@ -154,7 +174,6 @@ func (i *InMem) EndSpec(sessionID string, machineID string) error {
 	}
 	for index, spec := range session.Backlog {
 		if spec.End == 0 && spec.Start != 0 && spec.AssignedTo == machineID {
-			log.Printf("finished spec %s in session %s for machine %s", spec.FilePath, sessionID, machineID)
 			backlogItem := i.sessions[sessionID].Backlog[index]
 			backlogItem.End = time.Now().Unix()
 			backlogItem.EstimatedDuration = backlogItem.End - backlogItem.Start
@@ -173,7 +192,7 @@ func (i *InMem) EndSession(sessionID string) error {
 
 	i.sessions[sessionID].End = time.Now().Unix()
 
-	if err := i.SetProjectLatestSession(session.ProjectName, sessionID); err != nil {
+	if err := i.SetProjectLatestSession(session.ProjectID, sessionID); err != nil {
 		return err
 	}
 

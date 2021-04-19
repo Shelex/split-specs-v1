@@ -3,10 +3,10 @@ package domain
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/Shelex/split-specs/entities"
 	"github.com/Shelex/split-specs/storage"
+	uuid "github.com/satori/go.uuid"
 )
 
 var ErrSessionFinished = errors.New("session finished")
@@ -21,34 +21,56 @@ func NewSplitService(repo storage.Storage) SplitService {
 	}
 }
 
-func (svc *SplitService) AddSession(projectName string, sessionID string, inputSpecs []entities.Spec) error {
+func (svc *SplitService) AddSession(userID string, projectName string, sessionID string, inputSpecs []entities.Spec) error {
 	if sessionID == "" {
 		return fmt.Errorf("session id cannot be empty")
 	}
 
-	specs := svc.EstimateDuration(projectName, inputSpecs)
+	projectID, err := svc.Repository.GetUserProjectIDByName(userID, projectName)
 
-	if err := svc.Repository.AddProjectMaybe(projectName); err != nil {
+	if err != nil {
+		if errors.Is(err, storage.ErrProjectNotFound) {
+			newID, err := svc.AddProject(userID, projectName)
+			if err != nil {
+				return err
+			}
+			projectID = newID
+		} else {
+			return err
+		}
+	}
+
+	specs := svc.EstimateDuration(projectID, inputSpecs)
+
+	if _, err := svc.Repository.CreateSession(projectID, sessionID, specs); err != nil {
 		return err
 	}
 
-	if _, err := svc.Repository.AddSession(projectName, sessionID, specs); err != nil {
+	if err := svc.Repository.AttachSessionToProject(projectID, sessionID); err != nil {
 		return err
 	}
-
-	log.Printf("created session %s with %d specs\n", sessionID, len(specs))
-
-	if err := svc.Repository.AttachSessionToProject(projectName, sessionID); err != nil {
-		return err
-	}
-
-	log.Printf("attached session %s to project %s", sessionID, projectName)
 
 	return nil
 }
 
-func (svc *SplitService) EstimateDuration(projectName string, specs []entities.Spec) []entities.Spec {
-	latestSession, err := svc.Repository.GetProjectLatestSession(projectName)
+func (svc *SplitService) AddProject(userID string, projectName string) (string, error) {
+	id := uuid.NewV4().String()
+	if err := svc.Repository.CreateProject(entities.Project{
+		ID:   id,
+		Name: projectName,
+	}); err != nil {
+		return "", err
+	}
+
+	if err := svc.Repository.AttachProjectToUser(userID, id); err != nil {
+		return "", err
+	}
+
+	return id, nil
+}
+
+func (svc *SplitService) EstimateDuration(projectID string, specs []entities.Spec) []entities.Spec {
+	latestSession, err := svc.Repository.GetProjectLatestSession(projectID)
 	if err != nil {
 		return specs
 	}
@@ -76,8 +98,6 @@ func (svc *SplitService) GetProject(name string) (entities.ProjectFull, error) {
 }
 
 func (svc *SplitService) Next(sessionID string, machineID string) (string, error) {
-	log.Printf("requesting next spec in session %s with machine %s", sessionID, machineID)
-
 	if err := svc.Repository.EndSpec(sessionID, machineID); err != nil {
 		return "", err
 	}
@@ -91,8 +111,6 @@ func (svc *SplitService) Next(sessionID string, machineID string) (string, error
 	}
 
 	spec := svc.CalculateNext(session.Backlog)
-
-	log.Printf("got spec after CalculateNext to run %v for machine %s\n", spec, machineID)
 
 	if spec.FilePath == "" {
 		if err := svc.Repository.EndSession(sessionID); err != nil {
@@ -109,16 +127,12 @@ func (svc *SplitService) Next(sessionID string, machineID string) (string, error
 }
 
 func (svc *SplitService) CalculateNext(specs []entities.Spec) entities.Spec {
-	log.Printf("calculating next spec from %v\n", specs)
 	specsToRun := getSpecsToRun(specs)
-	log.Printf("got specs to run %v\n", specsToRun)
 
 	newSpec := getNewSpec(specsToRun)
 	if newSpec.FilePath != "" {
 		return newSpec
 	}
-
-	log.Printf("got newSpec to run %v\n", newSpec)
 
 	return getLongestSpec(specsToRun)
 }

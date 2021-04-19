@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"github.com/Shelex/split-specs/internal/users"
@@ -20,9 +19,6 @@ func Middleware() func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := r.Header.Get("Authorization")
 
-			log.Println("inside middleware")
-			log.Println(token)
-
 			// Allow unauthenticated users in
 			if token == "" {
 				next.ServeHTTP(w, r)
@@ -32,7 +28,7 @@ func Middleware() func(http.Handler) http.Handler {
 			//validate jwt token
 			user, err := jwt.ParseToken(token)
 			if err != nil {
-				http.Error(w, "Invalid token", http.StatusForbidden)
+				http.Error(w, "Invalid token: "+err.Error(), http.StatusForbidden)
 				return
 			}
 

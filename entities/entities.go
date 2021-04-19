@@ -1,21 +1,24 @@
 package entities
 
 type User struct {
-	ID       string
-	Username string
-	Password string
+	ID         string
+	Username   string
+	Password   string
+	ProjectIDs []string
 }
 
 type Session struct {
-	ID          string
-	ProjectName string
-	Backlog     []Spec
-	Start       int64
-	End         int64
+	ID        string
+	ProjectID string
+	Backlog   []Spec
+	Start     int64
+	End       int64
 }
 
 type Project struct {
-	Sessions      []string
+	ID            string
+	Name          string
+	SessionIDs    []string
 	LatestSession string
 }
 

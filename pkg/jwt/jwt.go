@@ -14,11 +14,12 @@ var (
 	SecretKey = []byte("secretsecret")
 )
 
-// //data we save in each token
-// type Claims struct {
-// 	username string //nolint
-// 	jwt.StandardClaims
-// }
+//data we save in each token
+type Claims struct {
+	username string //nolint
+	id       string //nolint
+	jwt.StandardClaims
+}
 
 //GenerateToken generates a jwt token and assign a username to it's claims and return it
 func GenerateToken(user users.User) (string, error) {

@@ -19,7 +19,7 @@ func (user *User) Create() error {
 
 	user.Password = hashedPassword
 
-	if err := storage.DB.CreateUser(userToEntityUser(*user)); err != nil {
+	if err := storage.DB.CreateUser(UserToEntityUser(*user)); err != nil {
 		return err
 	}
 	return nil
@@ -38,15 +38,6 @@ func (user *User) Exist() bool {
 		return false
 	}
 	return true
-}
-
-//GetUserIdByUsername check if a user exists in database by given username
-func GetUserIdByUsername(username string) (User, error) {
-	user, err := storage.DB.GetUserByUsername(username)
-	if err != nil {
-		return User{}, err
-	}
-	return entityUserToUser(*user), nil
 }
 
 //HashPassword hashes given password

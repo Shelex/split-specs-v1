@@ -20,16 +20,7 @@ func SpecFilesToSpecs(files []*model.SpecFile) []entities.Spec {
 	return specs
 }
 
-func ProjectSessionsToApiSessions(sessions []entities.Session) []*model.Session {
-	apiSessions := make([]*model.Session, len(sessions))
-
-	for i, session := range sessions {
-		apiSessions[i] = projectSessionToApiSession(session)
-	}
-	return apiSessions
-}
-
-func projectSessionToApiSession(session entities.Session) *model.Session {
+func ProjectSessionToApiSession(session entities.Session) *model.Session {
 	return &model.Session{
 		ID:      session.ID,
 		Start:   int(session.Start),

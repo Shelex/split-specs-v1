@@ -16,7 +16,8 @@ import (
 )
 
 func (r *mutationResolver) AddSession(ctx context.Context, session model.SessionInput) (*model.SessionInfo, error) {
-	if user := auth.ForContext(ctx); user == nil {
+	user := auth.ForContext(ctx)
+	if user == nil {
 		return nil, &users.AccessDeniedError{}
 	}
 
@@ -24,7 +25,7 @@ func (r *mutationResolver) AddSession(ctx context.Context, session model.Session
 
 	specs := factory.SpecFilesToSpecs(session.SpecFiles)
 
-	if err := r.SplitService.AddSession(session.ProjectName, id, specs); err != nil {
+	if err := r.SplitService.AddSession(user.ID, session.ProjectName, id, specs); err != nil {
 		return nil, err
 	}
 
@@ -67,6 +68,14 @@ func (r *mutationResolver) Login(ctx context.Context, input model.User) (string,
 	if !correct {
 		return "", &users.WrongUsernameOrPasswordError{}
 	}
+
+	dbUser, err := r.SplitService.Repository.GetUserByUsername(input.Username)
+	if err != nil {
+		return "", err
+	}
+
+	user.ID = dbUser.ID
+
 	token, err := jwt.GenerateToken(user)
 	if err != nil {
 		return "", err
@@ -91,17 +100,35 @@ func (r *queryResolver) NextSpec(ctx context.Context, sessionID string, machineI
 }
 
 func (r *queryResolver) Project(ctx context.Context, name string) (*model.Project, error) {
-	if user := auth.ForContext(ctx); user == nil {
+	user := auth.ForContext(ctx)
+	if user == nil {
 		return nil, &users.AccessDeniedError{}
 	}
-	project, err := r.SplitService.GetProject(name)
+
+	projectID, err := r.SplitService.Repository.GetUserProjectIDByName(user.ID, name)
 	if err != nil {
 		return nil, err
 	}
+
+	project, err := r.SplitService.Repository.GetProjectByID(projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	sessions := make([]*model.Session, len(project.SessionIDs))
+
+	for index, sessionID := range project.SessionIDs {
+		session, err := r.SplitService.Repository.GetSession(sessionID)
+		if err != nil {
+			return nil, err
+		}
+		sessions[index] = factory.ProjectSessionToApiSession(session)
+	}
+
 	return &model.Project{
 		ProjectName:   name,
 		LatestSession: &project.LatestSession,
-		Sessions:      factory.ProjectSessionsToApiSessions(project.Sessions),
+		Sessions:      sessions,
 	}, nil
 }
 

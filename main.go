@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -55,6 +56,10 @@ func Start() error {
 	gql := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
 		Resolvers: graph.NewResolver(svc),
 	}))
+
+	gql.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
+		return fmt.Errorf("internal server error: %s", err)
+	})
 
 	router.Handle("/query", (gql))
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
