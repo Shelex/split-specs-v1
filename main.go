@@ -83,8 +83,7 @@ func InitDb() (storage.Storage, error) {
 	case "dev":
 		repo, err = storage.NewInMemStorage()
 	default:
-		//TODO change to datastore
-		repo, err = storage.NewInMemStorage()
+		repo, err = storage.NewDataStore()
 	}
 	if err != nil {
 		return nil, err

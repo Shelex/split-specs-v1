@@ -5,12 +5,14 @@ import (
 	"time"
 
 	"github.com/Shelex/split-specs/entities"
+	uuid "github.com/satori/go.uuid"
 )
 
 type InMem struct {
 	sessions map[string]*entities.Session
 	projects map[string]*entities.Project
 	users    map[string]*entities.User
+	specs    map[string]*entities.Spec
 }
 
 func NewInMemStorage() (Storage, error) {
@@ -18,6 +20,7 @@ func NewInMemStorage() (Storage, error) {
 		sessions: map[string]*entities.Session{},
 		projects: map[string]*entities.Project{},
 		users:    map[string]*entities.User{},
+		specs:    map[string]*entities.Spec{},
 	}
 	return DB, nil
 }
@@ -78,17 +81,18 @@ func (i *InMem) AttachProjectToUser(userID string, projectID string) error {
 }
 
 func (i *InMem) CreateSession(projectID string, sessionID string, specs []entities.Spec) (*entities.Session, error) {
-	if sessionID == "" {
-		return nil, fmt.Errorf("[repository]: session id cannot be empty")
-	}
-
 	if _, ok := i.sessions[sessionID]; ok {
 		return nil, fmt.Errorf("[repository]: session id already in use for project %s", projectID)
 	}
 
+	specIds, err := i.CreateSpecs(sessionID, specs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create specs")
+	}
+
 	session := &entities.Session{
 		ID:        sessionID,
-		Backlog:   specs,
+		SpecIDs:   specIds,
 		ProjectID: projectID,
 	}
 
@@ -127,26 +131,6 @@ func (i *InMem) SetProjectLatestSession(projectID string, sessionID string) erro
 	return nil
 }
 
-func (i *InMem) GetFullProjectByName(name string) (entities.ProjectFull, error) {
-	var fullProject entities.ProjectFull
-
-	project, ok := i.projects[name]
-	if !ok {
-		return fullProject, ErrProjectNotFound
-	}
-
-	fullProject.LatestSession = project.LatestSession
-
-	for _, sessionID := range project.SessionIDs {
-		session, err := i.GetSession(sessionID)
-		if err != nil {
-			return fullProject, fmt.Errorf("session %s not found for %s project", sessionID, name)
-		}
-		fullProject.Sessions = append(fullProject.Sessions, session)
-	}
-	return fullProject, nil
-}
-
 func (i *InMem) GetSession(sessionID string) (entities.Session, error) {
 	var empty entities.Session
 	session, ok := i.sessions[sessionID]
@@ -163,13 +147,18 @@ func (i *InMem) StartSpec(sessionID string, machineID string, specName string) e
 		return err
 	}
 
-	for index, spec := range session.Backlog {
+	specs, err := i.GetSpecs(sessionID, session.SpecIDs)
+	if err != nil {
+		return err
+	}
+
+	for _, spec := range specs {
 		if spec.FilePath == specName {
 			if session.Start == 0 {
 				i.sessions[sessionID].Start = time.Now().Unix()
 			}
-			i.sessions[sessionID].Backlog[index].Start = time.Now().Unix()
-			i.sessions[sessionID].Backlog[index].AssignedTo = machineID
+			i.specs[spec.ID].Start = time.Now().Unix()
+			i.specs[spec.ID].AssignedTo = machineID
 			return nil
 		}
 	}
@@ -181,12 +170,16 @@ func (i *InMem) EndSpec(sessionID string, machineID string) error {
 	if err != nil {
 		return err
 	}
-	for index, spec := range session.Backlog {
+
+	specs, err := i.GetSpecs(sessionID, session.SpecIDs)
+	if err != nil {
+		return err
+	}
+
+	for _, spec := range specs {
 		if spec.End == 0 && spec.Start != 0 && spec.AssignedTo == machineID {
-			backlogItem := i.sessions[sessionID].Backlog[index]
-			backlogItem.End = time.Now().Unix()
-			backlogItem.EstimatedDuration = backlogItem.End - backlogItem.Start
-			i.sessions[sessionID].Backlog[index] = backlogItem
+			i.specs[spec.ID].End = time.Now().Unix()
+			i.specs[spec.ID].EstimatedDuration = i.specs[spec.ID].End - i.specs[spec.ID].Start
 			return nil
 		}
 	}
@@ -206,4 +199,27 @@ func (i *InMem) EndSession(sessionID string) error {
 	}
 
 	return nil
+}
+
+func (i *InMem) CreateSpecs(sessionID string, specs []entities.Spec) ([]string, error) {
+	ids := make([]string, len(specs))
+	for index, spec := range specs {
+		spec.ID = uuid.NewV4().String()
+		spec.SessionID = sessionID
+		i.specs[spec.ID] = &spec
+		ids[index] = spec.ID
+	}
+	return ids, nil
+}
+
+func (i *InMem) GetSpecs(sessionID string, ids []string) ([]entities.Spec, error) {
+	specs := make([]entities.Spec, len(ids))
+	for index, id := range ids {
+		spec, ok := i.specs[id]
+		if !ok {
+			return nil, ErrSpecNotFound
+		}
+		specs[index] = *spec
+	}
+	return specs, nil
 }

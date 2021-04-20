@@ -12,10 +12,9 @@ require (
 	github.com/vektah/gqlparser/v2 v2.1.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/mod v0.4.2 // indirect
-	golang.org/x/net v0.0.0-20210414194228-064579744ee0 // indirect
-	golang.org/x/oauth2 v0.0.0-20210413134643-5e61552d6c78 // indirect
-	golang.org/x/sys v0.0.0-20210415045647-66c3f260301c // indirect
-	google.golang.org/api v0.44.0 // indirect
-	google.golang.org/genproto v0.0.0-20210414175830-92282443c685 // indirect
-	google.golang.org/grpc v1.37.0 // indirect
+	golang.org/x/net v0.0.0-20210420072503-d25e30425868 // indirect
+	golang.org/x/sys v0.0.0-20210420072515-93ed5bcd2bfe // indirect
+	google.golang.org/api v0.45.0 // indirect
+	google.golang.org/appengine v1.6.7
+	google.golang.org/genproto v0.0.0-20210420162539-3c870d7478d2 // indirect
 )

@@ -20,12 +20,12 @@ func SpecFilesToSpecs(files []*model.SpecFile) []entities.Spec {
 	return specs
 }
 
-func ProjectSessionToApiSession(session entities.Session) *model.Session {
+func ProjectSessionToApiSession(session entities.Session, specs []entities.Spec) *model.Session {
 	return &model.Session{
 		ID:      session.ID,
 		Start:   int(session.Start),
 		End:     int(session.End),
-		Backlog: specsToApiSpecs(session.Backlog),
+		Backlog: specsToApiSpecs(specs),
 	}
 }
 

@@ -1,37 +1,47 @@
 package entities
 
 type User struct {
-	ID         string
-	Username   string
-	Password   string
-	ProjectIDs []string
+	ID         string   `datastore:"id"`
+	Username   string   `datastore:"username"`
+	Password   string   `datastore:"password"`
+	ProjectIDs []string `datastore:"projectIds"`
 }
 
 type Session struct {
+	ID        string   `datastore:"id"`
+	ProjectID string   `datastore:"projectId"`
+	SpecIDs   []string `datastore:"specIds"`
+	Start     int64    `datastore:"start"`
+	End       int64    `datastore:"end"`
+}
+
+type SessionWithSpecs struct {
 	ID        string
 	ProjectID string
-	Backlog   []Spec
+	Specs     []Spec
 	Start     int64
 	End       int64
 }
 
 type Project struct {
-	ID            string
-	Name          string
-	SessionIDs    []string
-	LatestSession string
+	ID            string   `datastore:"id"`
+	Name          string   `datastore:"name"`
+	SessionIDs    []string `datastore:"sessionIds"`
+	LatestSession string   `datastore:"latestSession"`
 }
 
 type ProjectFull struct {
-	Sessions      []Session
+	Sessions      []SessionWithSpecs
 	LatestSession string
 }
 
 type Spec struct {
-	FilePath          string
+	ID                string `datastore:"id"`
+	SessionID         string `datastore:"sessionId"`
+	FilePath          string `datastore:"filePath"`
 	Tests             []string
-	EstimatedDuration int64
-	Start             int64
-	End               int64
-	AssignedTo        string
+	EstimatedDuration int64  `datastore:"estimatedDuration"`
+	Start             int64  `datastore:"start"`
+	End               int64  `datastore:"end"`
+	AssignedTo        string `datastore:"assignedTo"`
 }

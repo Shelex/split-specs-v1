@@ -30,7 +30,7 @@ deps:
 
 .PHONY: dev
 dev: 
-	dev_appserver.py .
+	dev_appserver.py . --clear_datastore=yes --port=9999
 
 .PHONY: deploy
 deploy: 

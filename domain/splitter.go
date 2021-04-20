@@ -7,6 +7,7 @@ import (
 	"github.com/Shelex/split-specs/entities"
 	"github.com/Shelex/split-specs/storage"
 	uuid "github.com/satori/go.uuid"
+	"google.golang.org/appengine/datastore"
 )
 
 var ErrSessionFinished = errors.New("session finished")
@@ -29,8 +30,8 @@ func (svc *SplitService) AddSession(userID string, projectName string, sessionID
 	projectID, err := svc.Repository.GetUserProjectIDByName(userID, projectName)
 
 	if err != nil {
-		if errors.Is(err, storage.ErrProjectNotFound) {
-			newID, err := svc.AddProject(userID, projectName)
+		if errors.Is(err, storage.ErrProjectNotFound) || errors.Is(err, datastore.ErrNoSuchEntity) {
+			newID, err := svc.AddProject(userID, projectName, sessionID)
 			if err != nil {
 				return err
 			}
@@ -53,11 +54,12 @@ func (svc *SplitService) AddSession(userID string, projectName string, sessionID
 	return nil
 }
 
-func (svc *SplitService) AddProject(userID string, projectName string) (string, error) {
+func (svc *SplitService) AddProject(userID string, projectName string, sessionID string) (string, error) {
 	id := uuid.NewV4().String()
 	if err := svc.Repository.CreateProject(entities.Project{
-		ID:   id,
-		Name: projectName,
+		ID:         id,
+		Name:       projectName,
+		SessionIDs: []string{sessionID},
 	}); err != nil {
 		return "", err
 	}
@@ -92,27 +94,19 @@ func (svc *SplitService) EstimateDuration(projectID string, specs []entities.Spe
 	if err != nil {
 		return specs
 	}
+	historySpecs, err := svc.Repository.GetSpecs(latestSession.ID, latestSession.SpecIDs)
+	if err != nil {
+		return specs
+	}
 
 	for idx, spec := range specs {
-		for _, history := range latestSession.Backlog {
+		for _, history := range historySpecs {
 			if history.FilePath == spec.FilePath {
 				specs[idx].EstimatedDuration = history.EstimatedDuration
 			}
 		}
 	}
 	return specs
-}
-
-func (svc *SplitService) GetProject(name string) (entities.ProjectFull, error) {
-	var empty entities.ProjectFull
-
-	project, err := svc.Repository.GetFullProjectByName(name)
-
-	if err != nil {
-		return empty, err
-	}
-
-	return project, nil
 }
 
 func (svc *SplitService) GetProjectList(user entities.User) ([]string, error) {
@@ -135,18 +129,28 @@ func (svc *SplitService) GetProjectList(user entities.User) ([]string, error) {
 
 func (svc *SplitService) Next(sessionID string, machineID string) (string, error) {
 	if err := svc.Repository.EndSpec(sessionID, machineID); err != nil {
-		return "", err
+		if !errors.Is(err, datastore.ErrNoSuchEntity) {
+			return "", storage.ErrSessionNotFound
+		}
 	}
 
 	session, err := svc.Repository.GetSession(sessionID)
+	if errors.Is(err, datastore.ErrNoSuchEntity) {
+		return "", storage.ErrSessionNotFound
+	}
 	if err != nil {
 		return "", err
 	}
-	if len(session.Backlog) == 0 {
+	if len(session.SpecIDs) == 0 {
 		return "", fmt.Errorf("backlog for session %s is empty", sessionID)
 	}
 
-	spec := svc.CalculateNext(session.Backlog)
+	specs, err := svc.Repository.GetSpecs(sessionID, session.SpecIDs)
+	if err != nil {
+		return "", err
+	}
+
+	spec := svc.CalculateNext(specs)
 
 	if spec.FilePath == "" {
 		if err := svc.Repository.EndSession(sessionID); err != nil {

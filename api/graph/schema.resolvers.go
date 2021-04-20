@@ -146,7 +146,13 @@ func (r *queryResolver) Project(ctx context.Context, name string) (*model.Projec
 		if err != nil {
 			return nil, err
 		}
-		sessions[index] = factory.ProjectSessionToApiSession(session)
+
+		specs, err := r.SplitService.Repository.GetSpecs(sessionID, session.SpecIDs)
+		if err != nil {
+			return nil, err
+		}
+
+		sessions[index] = factory.ProjectSessionToApiSession(session, specs)
 	}
 
 	return &model.Project{
