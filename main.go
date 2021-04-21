@@ -26,7 +26,7 @@ func lineSeparator() {
 
 func startMessage(port string) {
 	lineSeparator()
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground\n", port)
+	log.Printf("connect to http://localhost:%s/playground for GraphQL playground\n", port)
 	lineSeparator()
 }
 
@@ -62,7 +62,7 @@ func Start() error {
 	})
 
 	router.Handle("/query", (gql))
-	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	router.Handle("/playground", playground.Handler("GraphQL playground", "/query"))
 
 	startMessage(port)
 

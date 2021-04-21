@@ -23,6 +23,12 @@ api:
 lint: 
 	golangci-lint run
 
+.PHONY: keys
+keys: 
+	mkdir keys
+	openssl genrsa -out ./keys/app.rsa 1024
+	openssl rsa -in app.rsa -pubout > ./keys/app.rsa.pub
+
 .PHONY: deps
 deps:
 	go mod tidy

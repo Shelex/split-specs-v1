@@ -30,7 +30,7 @@ func (svc *SplitService) AddSession(userID string, projectName string, sessionID
 	projectID, err := svc.Repository.GetUserProjectIDByName(userID, projectName)
 
 	if err != nil {
-		if errors.Is(err, storage.ErrProjectNotFound) || errors.Is(err, datastore.ErrNoSuchEntity) {
+		if err.Error() == storage.ErrProjectNotFound.Error() || err.Error() == datastore.ErrNoSuchEntity.Error() {
 			newID, err := svc.AddProject(userID, projectName, sessionID)
 			if err != nil {
 				return err
@@ -129,13 +129,13 @@ func (svc *SplitService) GetProjectList(user entities.User) ([]string, error) {
 
 func (svc *SplitService) Next(sessionID string, machineID string) (string, error) {
 	if err := svc.Repository.EndSpec(sessionID, machineID); err != nil {
-		if !errors.Is(err, datastore.ErrNoSuchEntity) {
+		if err.Error() != datastore.ErrNoSuchEntity.Error() {
 			return "", storage.ErrSessionNotFound
 		}
 	}
 
 	session, err := svc.Repository.GetSession(sessionID)
-	if errors.Is(err, datastore.ErrNoSuchEntity) {
+	if err.Error() != datastore.ErrNoSuchEntity.Error() {
 		return "", storage.ErrSessionNotFound
 	}
 	if err != nil {

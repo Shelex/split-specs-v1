@@ -1,22 +1,29 @@
-# Split your specs based on previous run durations
+# Receive spec files to run based on previous run
 Simple graphql api to grab spec files in order: new specs -> longest specs -> short specs  
-Could be used to make parallel machines that run your tests much equal in duration times  
-Deployed with Google Cloud AppEngine
+Could be used to make concurrent machines that run your tests much equal in duration times
 
 # Use
- - [Graphql Playground](https://split-specs.appspot.com/)
+ - [Graphql Playground](https://split-specs.appspot.com/playground)
  - [API Endpoint /query](https://split-specs.appspot.com/query)
 
+# Flow
+ - Register user or login with existing one
+ - Create new session (it will be attached to existing project or will create new)
+ - Get nextSpec for your sessionID and machineID, every query will finish previous spec for this session + machine and return next. Final query will return message "session finished" and finish spec and session for specific machineID. in case machineID is not passed it will be "default"
 
-# Install
+# Try it locally
  - clone this repository  
  - `cd split-specs`  
  - `make deps` - download dependencies
+ - `make keys` - generate private and public keys for auth
+ - `export ENV=dev` - to use in memory storage instead of real db
  - `make api` - build binary and execute  
  - open `http://localhost:8080/` for GraphQL playground or use Altair/Postman/Insomnia  
 
-# Develop with gcloud sdk
- - `make dev` - run dev server with file watcher, app.yaml should have runtime go111
+# Use with gcloud sdk
+ - install Python 2.7, [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) and follow the docs
+ - [Quickstart](https://cloud.google.com/appengine/docs/standard/go/quickstart) - for using go with appengine 
+ - `make dev` - run dev server with file watcher, app.yaml should have runtime go111, but changed to go115 when deploying
  - `make deploy` - deploy app to app engine
  - `make browse` - open deployed app in local browser
 
@@ -116,7 +123,3 @@ mutation{
 } 
 
 ```
-
- # TODO
-  - :x: implement persistance layer with firestore in datastore mode
-  - :x: implement detection logic for changes in test list inside spec file

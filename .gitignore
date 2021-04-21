@@ -1,4 +1,5 @@
 keys
+vendor
 coverage.out
 *.pem
 cmd
