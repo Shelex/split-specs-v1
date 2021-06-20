@@ -1,9 +1,15 @@
 package users
 
-type WrongUsernameOrPasswordError struct{}
+type InvalidEmailFormat struct{}
 
-func (m *WrongUsernameOrPasswordError) Error() string {
-	return "wrong username or password"
+func (m *InvalidEmailFormat) Error() string {
+	return "wrong email format"
+}
+
+type WrongEmailOrPasswordError struct{}
+
+func (m *WrongEmailOrPasswordError) Error() string {
+	return "wrong email or password"
 }
 
 type AccessDeniedError struct{}
@@ -12,8 +18,8 @@ func (e *AccessDeniedError) Error() string {
 	return "access denied"
 }
 
-type InvalidUsernameOrPassordError struct{}
+type InvalidEmailOrPassordError struct{}
 
-func (e *InvalidUsernameOrPassordError) Error() string {
-	return "invalid username or password"
+func (e *InvalidEmailOrPassordError) Error() string {
+	return "invalid email or password"
 }

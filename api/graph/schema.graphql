@@ -1,5 +1,5 @@
 input User {
-  username: String!
+  email: String!
   password: String!
 }
 
@@ -55,7 +55,7 @@ type Mutation {
   register(input: User!): String!
   login(input: User!): String!
   changePassword(input: ChangePasswordInput!): String!
-  shareProject(username: String!, projectName: String!): String!
+  shareProject(email: String!, projectName: String!): String!
 }
 
 schema {

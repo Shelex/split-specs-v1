@@ -1,13 +1,15 @@
 package users
 
 import (
+	"net/mail"
+
 	"github.com/Shelex/split-specs/storage"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
 	ID       string
-	Username string
+	Email    string
 	Password string
 }
 
@@ -26,7 +28,7 @@ func (user *User) Create() error {
 }
 
 func (user *User) Authenticate() bool {
-	dbUser, err := storage.DB.GetUserByUsername(user.Username)
+	dbUser, err := storage.DB.GetUserByEmail(user.Email)
 	if err != nil {
 		return false
 	}
@@ -34,14 +36,14 @@ func (user *User) Authenticate() bool {
 }
 
 func (user *User) Exist() bool {
-	if _, err := storage.DB.GetUserByUsername(user.Username); err != nil {
+	if _, err := storage.DB.GetUserByEmail(user.Email); err != nil {
 		return false
 	}
 	return true
 }
 
 func (user *User) ChangePassword(password string, newPassword string) error {
-	dbUser, err := storage.DB.GetUserByUsername(user.Username)
+	dbUser, err := storage.DB.GetUserByEmail(user.Email)
 	if err != nil {
 		return &AccessDeniedError{}
 	}
@@ -53,6 +55,12 @@ func (user *User) ChangePassword(password string, newPassword string) error {
 		return err
 	}
 	return storage.DB.UpdatePassword(user.ID, hashedPassword)
+}
+
+//ValidateEmail checks that address matches RFC 5322 spec
+func (user *User) EmailIsValid() bool {
+	_, err := mail.ParseAddress(user.Email)
+	return err == nil
 }
 
 //HashPassword hashes given password

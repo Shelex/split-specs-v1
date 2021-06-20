@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Shelex/split-specs/api/factory"
 	"github.com/Shelex/split-specs/api/graph/generated"
@@ -12,7 +13,7 @@ import (
 	"github.com/Shelex/split-specs/internal/auth"
 	"github.com/Shelex/split-specs/internal/users"
 	"github.com/Shelex/split-specs/pkg/jwt"
-	uuid "github.com/satori/go.uuid"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
 func (r *mutationResolver) AddSession(ctx context.Context, session model.SessionInput) (*model.SessionInfo, error) {
@@ -21,7 +22,7 @@ func (r *mutationResolver) AddSession(ctx context.Context, session model.Session
 		return nil, &users.AccessDeniedError{}
 	}
 
-	id := uuid.NewV4().String()
+	id, _ := gonanoid.New()
 
 	specs := factory.SpecFilesToSpecs(session.SpecFiles)
 
@@ -36,19 +37,26 @@ func (r *mutationResolver) AddSession(ctx context.Context, session model.Session
 }
 
 func (r *mutationResolver) Register(ctx context.Context, input model.User) (string, error) {
-	if input.Username == "" || input.Password == "" {
-		return "", &users.InvalidUsernameOrPassordError{}
+	if input.Email == "" || input.Password == "" {
+		return "", &users.InvalidEmailOrPassordError{}
 	}
 
+	id, _ := gonanoid.New()
+
 	user := users.User{
-		Username: input.Username,
 		Password: input.Password,
-		ID:       uuid.NewV4().String(),
+		Email:    input.Email,
+		ID:       id,
+	}
+
+	if !user.EmailIsValid() {
+		return "", &users.InvalidEmailFormat{}
 	}
 
 	if user.Exist() {
-		return "", &users.WrongUsernameOrPasswordError{}
+		return "", &users.WrongEmailOrPasswordError{}
 	}
+
 	if err := user.Create(); err != nil {
 		return "", err
 	}
@@ -61,15 +69,17 @@ func (r *mutationResolver) Register(ctx context.Context, input model.User) (stri
 }
 
 func (r *mutationResolver) Login(ctx context.Context, input model.User) (string, error) {
-	var user users.User
-	user.Username = input.Username
-	user.Password = input.Password
-	correct := user.Authenticate()
-	if !correct {
-		return "", &users.WrongUsernameOrPasswordError{}
+	user := users.User{
+		Email:    input.Email,
+		Password: input.Password,
 	}
 
-	dbUser, err := r.SplitService.Repository.GetUserByUsername(input.Username)
+	correct := user.Authenticate()
+	if !correct {
+		return "", &users.WrongEmailOrPasswordError{}
+	}
+
+	dbUser, err := r.SplitService.Repository.GetUserByEmail(input.Email)
 	if err != nil {
 		return "", err
 	}
@@ -96,15 +106,15 @@ func (r *mutationResolver) ChangePassword(ctx context.Context, input model.Chang
 	return "password changed", nil
 }
 
-func (r *mutationResolver) ShareProject(ctx context.Context, username string, projectName string) (string, error) {
+func (r *mutationResolver) ShareProject(ctx context.Context, email string, projectName string) (string, error) {
 	user := auth.ForContext(ctx)
 	if user == nil {
 		return "", &users.AccessDeniedError{}
 	}
-	if err := r.SplitService.InviteUserToProject(users.UserToEntityUser(*user), username, projectName); err != nil {
+	if err := r.SplitService.InviteUserToProject(users.UserToEntityUser(*user), email, projectName); err != nil {
 		return "", err
 	}
-	return "shared project " + projectName + " with " + username, nil
+	return fmt.Sprintf("shared project %s with %s", projectName, email), nil
 }
 
 func (r *queryResolver) NextSpec(ctx context.Context, sessionID string, machineID *string) (string, error) {

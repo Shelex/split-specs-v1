@@ -2,7 +2,7 @@ package entities
 
 type User struct {
 	ID         string   `datastore:"id"`
-	Username   string   `datastore:"username"`
+	Email      string   `datastore:"email"`
 	Password   string   `datastore:"password"`
 	ProjectIDs []string `datastore:"projectIds"`
 }

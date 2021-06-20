@@ -31,7 +31,7 @@ type Storage interface {
 
 	//auth
 	CreateUser(user entities.User) error
-	GetUserByUsername(username string) (*entities.User, error)
+	GetUserByEmail(email string) (*entities.User, error)
 	UpdatePassword(userID string, newPassword string) error
 }
 

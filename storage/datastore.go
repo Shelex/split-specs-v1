@@ -7,7 +7,7 @@ import (
 
 	"cloud.google.com/go/datastore"
 	"github.com/Shelex/split-specs/entities"
-	uuid "github.com/satori/go.uuid"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 	"google.golang.org/appengine"
 )
 
@@ -254,8 +254,8 @@ func (d DataStore) CreateUser(user entities.User) error {
 	return nil
 }
 
-func (d DataStore) GetUserByUsername(username string) (*entities.User, error) {
-	query := datastore.NewQuery(userKind).Filter("username=", username).Limit(1)
+func (d DataStore) GetUserByEmail(email string) (*entities.User, error) {
+	query := datastore.NewQuery(userKind).Filter("email=", email).Limit(1)
 
 	var users []entities.User
 
@@ -368,7 +368,8 @@ func (d DataStore) CreateSpecs(sessionID string, specs []entities.Spec) ([]strin
 	specIds := make([]string, len(specs))
 
 	for index, spec := range specs {
-		spec.ID = uuid.NewV4().String()
+		id, _ := gonanoid.New()
+		spec.ID = id
 		spec.SessionID = sessionID
 		specKeys[index] = datastore.NameKey(specKind, spec.ID, sessionKey)
 		specIds[index] = spec.ID

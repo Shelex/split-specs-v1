@@ -48,7 +48,7 @@ type ComplexityRoot struct {
 		ChangePassword func(childComplexity int, input model.ChangePasswordInput) int
 		Login          func(childComplexity int, input model.User) int
 		Register       func(childComplexity int, input model.User) int
-		ShareProject   func(childComplexity int, username string, projectName string) int
+		ShareProject   func(childComplexity int, email string, projectName string) int
 	}
 
 	Project struct {
@@ -89,7 +89,7 @@ type MutationResolver interface {
 	Register(ctx context.Context, input model.User) (string, error)
 	Login(ctx context.Context, input model.User) (string, error)
 	ChangePassword(ctx context.Context, input model.ChangePasswordInput) (string, error)
-	ShareProject(ctx context.Context, username string, projectName string) (string, error)
+	ShareProject(ctx context.Context, email string, projectName string) (string, error)
 }
 type QueryResolver interface {
 	NextSpec(ctx context.Context, sessionID string, machineID *string) (string, error)
@@ -170,7 +170,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ShareProject(childComplexity, args["username"].(string), args["projectName"].(string)), true
+		return e.complexity.Mutation.ShareProject(childComplexity, args["email"].(string), args["projectName"].(string)), true
 
 	case "Project.latestSession":
 		if e.complexity.Project.LatestSession == nil {
@@ -366,7 +366,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 
 var sources = []*ast.Source{
 	{Name: "graph/schema.graphql", Input: `input User {
-  username: String!
+  email: String!
   password: String!
 }
 
@@ -422,7 +422,7 @@ type Mutation {
   register(input: User!): String!
   login(input: User!): String!
   changePassword(input: ChangePasswordInput!): String!
-  shareProject(username: String!, projectName: String!): String!
+  shareProject(email: String!, projectName: String!): String!
 }
 
 schema {
@@ -501,14 +501,14 @@ func (ec *executionContext) field_Mutation_shareProject_args(ctx context.Context
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["username"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+	if tmp, ok := rawArgs["email"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["username"] = arg0
+	args["email"] = arg0
 	var arg1 string
 	if tmp, ok := rawArgs["projectName"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("projectName"))
@@ -806,7 +806,7 @@ func (ec *executionContext) _Mutation_shareProject(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ShareProject(rctx, args["username"].(string), args["projectName"].(string))
+		return ec.resolvers.Mutation().ShareProject(rctx, args["email"].(string), args["projectName"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2671,11 +2671,11 @@ func (ec *executionContext) unmarshalInputUser(ctx context.Context, obj interfac
 
 	for k, v := range asMap {
 		switch k {
-		case "username":
+		case "email":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
-			it.Username, err = ec.unmarshalNString2string(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+			it.Email, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}

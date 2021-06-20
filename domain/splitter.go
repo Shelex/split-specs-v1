@@ -6,7 +6,7 @@ import (
 
 	"github.com/Shelex/split-specs/entities"
 	"github.com/Shelex/split-specs/storage"
-	uuid "github.com/satori/go.uuid"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 	"google.golang.org/appengine/datastore"
 )
 
@@ -55,7 +55,8 @@ func (svc *SplitService) AddSession(userID string, projectName string, sessionID
 }
 
 func (svc *SplitService) AddProject(userID string, projectName string, sessionID string) (string, error) {
-	id := uuid.NewV4().String()
+	id, _ := gonanoid.New()
+
 	if err := svc.Repository.CreateProject(entities.Project{
 		ID:         id,
 		Name:       projectName,
@@ -77,7 +78,7 @@ func (svc *SplitService) InviteUserToProject(user entities.User, guest string, p
 		return fmt.Errorf("failed to share project")
 	}
 
-	guestUser, err := svc.Repository.GetUserByUsername(guest)
+	guestUser, err := svc.Repository.GetUserByEmail(guest)
 	if err != nil {
 		return fmt.Errorf("failed to share project")
 	}

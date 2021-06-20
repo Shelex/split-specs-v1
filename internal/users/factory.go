@@ -4,7 +4,7 @@ import "github.com/Shelex/split-specs/entities"
 
 func UserToEntityUser(user User) entities.User {
 	return entities.User{
-		Username: user.Username,
+		Email:    user.Email,
 		Password: user.Password,
 		ID:       user.ID,
 	}
@@ -12,7 +12,7 @@ func UserToEntityUser(user User) entities.User {
 
 func EntityUserToUser(user entities.User) User {
 	return User{
-		Username: user.Username,
+		Email:    user.Email,
 		Password: user.Password,
 		ID:       user.ID,
 	}

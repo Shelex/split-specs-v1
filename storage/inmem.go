@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/Shelex/split-specs/entities"
-	uuid "github.com/satori/go.uuid"
+	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
 type InMem struct {
@@ -35,9 +35,9 @@ func (i *InMem) UpdatePassword(userID string, newPassword string) error {
 	return nil
 }
 
-func (i *InMem) GetUserByUsername(username string) (*entities.User, error) {
+func (i *InMem) GetUserByEmail(email string) (*entities.User, error) {
 	for _, user := range i.users {
-		if user.Username == username {
+		if user.Email == email {
 			return user, nil
 		}
 	}
@@ -204,7 +204,8 @@ func (i *InMem) EndSession(sessionID string) error {
 func (i *InMem) CreateSpecs(sessionID string, specs []entities.Spec) ([]string, error) {
 	ids := make([]string, len(specs))
 	for index, spec := range specs {
-		spec.ID = uuid.NewV4().String()
+		id, _ := gonanoid.New()
+		spec.ID = id
 		spec.SessionID = sessionID
 		i.specs[spec.ID] = &spec
 		ids[index] = spec.ID
