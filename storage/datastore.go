@@ -172,7 +172,7 @@ func (d DataStore) StartSpec(sessionID string, machineID string, specName string
 	}
 	return nil
 }
-func (d DataStore) EndSpec(sessionID string, machineID string) error {
+func (d DataStore) EndSpec(sessionID string, machineID string, isPassed bool) error {
 	session, _ := d.GetSession(sessionID)
 	if session.ID == "" {
 		return nil
@@ -198,6 +198,7 @@ func (d DataStore) EndSpec(sessionID string, machineID string) error {
 
 	finishedSpec.End = time.Now().Unix()
 	finishedSpec.EstimatedDuration = finishedSpec.End - finishedSpec.Start
+	finishedSpec.Passed = isPassed
 
 	sessionKey := datastore.NameKey(sessionKind, session.ID, nil)
 	specKey := datastore.NameKey(specKind, finishedSpec.ID, sessionKey)

@@ -18,6 +18,11 @@ input SessionInput {
   specFiles: [SpecFile!]!
 }
 
+input NextOptions {
+  machineId: String
+  previousPassed: Boolean
+}
+
 type SessionInfo {
   projectName: String!
   sessionId: String!
@@ -41,11 +46,12 @@ type Spec {
   estimatedDuration: Int!
   start: Int!
   end: Int!
+  passed: Boolean!
   assignedTo: String!
 }
 
 type Query {
-  nextSpec(sessionId: String!, machineId: String): String!
+  nextSpec(sessionId: String!, options: NextOptions): String!
   project(name: String!): Project!
   projects: [String!]!
 }

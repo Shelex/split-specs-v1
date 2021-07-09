@@ -128,19 +128,20 @@ func (svc *SplitService) GetProjectList(user entities.User) ([]string, error) {
 	return projects, nil
 }
 
-func (svc *SplitService) Next(sessionID string, machineID string) (string, error) {
-	if err := svc.Repository.EndSpec(sessionID, machineID); err != nil {
-		if err.Error() != datastore.ErrNoSuchEntity.Error() {
+func (svc *SplitService) Next(sessionID string, machineID string, isPreviousSpecPassed bool) (string, error) {
+	if err := svc.Repository.EndSpec(sessionID, machineID, isPreviousSpecPassed); err != nil {
+		if err.Error() == datastore.ErrNoSuchEntity.Error() {
 			return "", storage.ErrSessionNotFound
 		}
 	}
 
 	session, err := svc.Repository.GetSession(sessionID)
-	if err.Error() != datastore.ErrNoSuchEntity.Error() {
+
+	if err != nil && err.Error() == datastore.ErrNoSuchEntity.Error() {
 		return "", storage.ErrSessionNotFound
 	}
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get session: %s", err)
 	}
 	if len(session.SpecIDs) == 0 {
 		return "", fmt.Errorf("backlog for session %s is empty", sessionID)
@@ -148,20 +149,20 @@ func (svc *SplitService) Next(sessionID string, machineID string) (string, error
 
 	specs, err := svc.Repository.GetSpecs(sessionID, session.SpecIDs)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get specs: %s", err)
 	}
 
 	spec := svc.CalculateNext(specs)
 
 	if spec.FilePath == "" {
 		if err := svc.Repository.EndSession(sessionID); err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to finish session: %s", err)
 		}
 		return "", ErrSessionFinished
 	}
 
 	if err := svc.Repository.StartSpec(sessionID, machineID, spec.FilePath); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to start spec: %s", err)
 	}
 
 	return spec.FilePath, nil

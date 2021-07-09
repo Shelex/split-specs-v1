@@ -117,18 +117,23 @@ func (r *mutationResolver) ShareProject(ctx context.Context, email string, proje
 	return fmt.Sprintf("shared project %s with %s", projectName, email), nil
 }
 
-func (r *queryResolver) NextSpec(ctx context.Context, sessionID string, machineID *string) (string, error) {
+func (r *queryResolver) NextSpec(ctx context.Context, sessionID string, options *model.NextOptions) (string, error) {
 	if user := auth.ForContext(ctx); user == nil {
 		return "", &users.AccessDeniedError{}
 	}
 	machine := "default"
-	if machineID != nil {
-		machine = *machineID
+	if options != nil && options.MachineID != nil {
+		machine = *options.MachineID
 	}
 
-	next, err := r.SplitService.Next(sessionID, machine)
+	previousSpecPassed := false
+	if options != nil && options.PreviousPassed != nil {
+		previousSpecPassed = *options.PreviousPassed
+	}
+
+	next, err := r.SplitService.Next(sessionID, machine, previousSpecPassed)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to receive next spec: %s", err)
 	}
 	return next, nil
 }

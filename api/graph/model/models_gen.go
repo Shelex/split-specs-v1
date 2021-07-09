@@ -7,6 +7,11 @@ type ChangePasswordInput struct {
 	NewPassword string `json:"newPassword"`
 }
 
+type NextOptions struct {
+	MachineID      *string `json:"machineId"`
+	PreviousPassed *bool   `json:"previousPassed"`
+}
+
 type Project struct {
 	ProjectName   string     `json:"projectName"`
 	LatestSession *string    `json:"latestSession"`
@@ -35,6 +40,7 @@ type Spec struct {
 	EstimatedDuration int    `json:"estimatedDuration"`
 	Start             int    `json:"start"`
 	End               int    `json:"end"`
+	Passed            bool   `json:"passed"`
 	AssignedTo        string `json:"assignedTo"`
 }
 

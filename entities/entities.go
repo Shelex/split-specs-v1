@@ -43,5 +43,6 @@ type Spec struct {
 	EstimatedDuration int64  `datastore:"estimatedDuration"`
 	Start             int64  `datastore:"start"`
 	End               int64  `datastore:"end"`
+	Passed            bool   `datastore:"passed"`
 	AssignedTo        string `datastore:"assignedTo"`
 }

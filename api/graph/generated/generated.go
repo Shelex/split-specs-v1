@@ -58,7 +58,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		NextSpec func(childComplexity int, sessionID string, machineID *string) int
+		NextSpec func(childComplexity int, sessionID string, options *model.NextOptions) int
 		Project  func(childComplexity int, name string) int
 		Projects func(childComplexity int) int
 	}
@@ -80,6 +80,7 @@ type ComplexityRoot struct {
 		End               func(childComplexity int) int
 		EstimatedDuration func(childComplexity int) int
 		File              func(childComplexity int) int
+		Passed            func(childComplexity int) int
 		Start             func(childComplexity int) int
 	}
 }
@@ -92,7 +93,7 @@ type MutationResolver interface {
 	ShareProject(ctx context.Context, email string, projectName string) (string, error)
 }
 type QueryResolver interface {
-	NextSpec(ctx context.Context, sessionID string, machineID *string) (string, error)
+	NextSpec(ctx context.Context, sessionID string, options *model.NextOptions) (string, error)
 	Project(ctx context.Context, name string) (*model.Project, error)
 	Projects(ctx context.Context) ([]string, error)
 }
@@ -203,7 +204,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.NextSpec(childComplexity, args["sessionId"].(string), args["machineId"].(*string)), true
+		return e.complexity.Query.NextSpec(childComplexity, args["sessionId"].(string), args["options"].(*model.NextOptions)), true
 
 	case "Query.project":
 		if e.complexity.Query.Project == nil {
@@ -293,6 +294,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Spec.File(childComplexity), true
+
+	case "Spec.passed":
+		if e.complexity.Spec.Passed == nil {
+			break
+		}
+
+		return e.complexity.Spec.Passed(childComplexity), true
 
 	case "Spec.start":
 		if e.complexity.Spec.Start == nil {
@@ -385,6 +393,11 @@ input SessionInput {
   specFiles: [SpecFile!]!
 }
 
+input NextOptions {
+  machineId: String
+  previousPassed: Boolean
+}
+
 type SessionInfo {
   projectName: String!
   sessionId: String!
@@ -408,11 +421,12 @@ type Spec {
   estimatedDuration: Int!
   start: Int!
   end: Int!
+  passed: Boolean!
   assignedTo: String!
 }
 
 type Query {
-  nextSpec(sessionId: String!, machineId: String): String!
+  nextSpec(sessionId: String!, options: NextOptions): String!
   project(name: String!): Project!
   projects: [String!]!
 }
@@ -548,15 +562,15 @@ func (ec *executionContext) field_Query_nextSpec_args(ctx context.Context, rawAr
 		}
 	}
 	args["sessionId"] = arg0
-	var arg1 *string
-	if tmp, ok := rawArgs["machineId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("machineId"))
-		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+	var arg1 *model.NextOptions
+	if tmp, ok := rawArgs["options"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("options"))
+		arg1, err = ec.unmarshalONextOptions2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐNextOptions(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["machineId"] = arg1
+	args["options"] = arg1
 	return args, nil
 }
 
@@ -947,7 +961,7 @@ func (ec *executionContext) _Query_nextSpec(ctx context.Context, field graphql.C
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().NextSpec(rctx, args["sessionId"].(string), args["machineId"].(*string))
+		return ec.resolvers.Query().NextSpec(rctx, args["sessionId"].(string), args["options"].(*model.NextOptions))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1457,6 +1471,41 @@ func (ec *executionContext) _Spec_end(ctx context.Context, field graphql.Collect
 	res := resTmp.(int)
 	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Spec_passed(ctx context.Context, field graphql.CollectedField, obj *model.Spec) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Spec",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Passed, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Spec_assignedTo(ctx context.Context, field graphql.CollectedField, obj *model.Spec) (ret graphql.Marshaler) {
@@ -2609,6 +2658,34 @@ func (ec *executionContext) unmarshalInputChangePasswordInput(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputNextOptions(ctx context.Context, obj interface{}) (model.NextOptions, error) {
+	var it model.NextOptions
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "machineId":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("machineId"))
+			it.MachineID, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "previousPassed":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("previousPassed"))
+			it.PreviousPassed, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputSessionInput(ctx context.Context, obj interface{}) (model.SessionInput, error) {
 	var it model.SessionInput
 	var asMap = obj.(map[string]interface{})
@@ -2954,6 +3031,11 @@ func (ec *executionContext) _Spec(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "end":
 			out.Values[i] = ec._Spec_end(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "passed":
+			out.Values[i] = ec._Spec_passed(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3633,6 +3715,14 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return graphql.MarshalBoolean(*v)
+}
+
+func (ec *executionContext) unmarshalONextOptions2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐNextOptions(ctx context.Context, v interface{}) (*model.NextOptions, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputNextOptions(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOSession2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSessionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Session) graphql.Marshaler {

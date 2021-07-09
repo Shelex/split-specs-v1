@@ -27,7 +27,7 @@ type Storage interface {
 	CreateSpecs(sessionID string, specs []entities.Spec) ([]string, error)
 	GetSpecs(sessionID string, ids []string) ([]entities.Spec, error)
 	StartSpec(sessionID string, machineID string, specName string) error
-	EndSpec(sessionID string, machineID string) error
+	EndSpec(sessionID string, machineID string, isPassed bool) error
 
 	//auth
 	CreateUser(user entities.User) error

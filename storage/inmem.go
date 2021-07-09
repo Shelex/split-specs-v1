@@ -165,7 +165,7 @@ func (i *InMem) StartSpec(sessionID string, machineID string, specName string) e
 	return nil
 }
 
-func (i *InMem) EndSpec(sessionID string, machineID string) error {
+func (i *InMem) EndSpec(sessionID string, machineID string, isPassed bool) error {
 	session, err := i.GetSession(sessionID)
 	if err != nil {
 		return err
@@ -180,6 +180,7 @@ func (i *InMem) EndSpec(sessionID string, machineID string) error {
 		if spec.End == 0 && spec.Start != 0 && spec.AssignedTo == machineID {
 			i.specs[spec.ID].End = time.Now().Unix()
 			i.specs[spec.ID].EstimatedDuration = i.specs[spec.ID].End - i.specs[spec.ID].Start
+			i.specs[spec.ID].Passed = isPassed
 			return nil
 		}
 	}
