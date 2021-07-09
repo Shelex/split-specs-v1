@@ -38,4 +38,4 @@ type Storage interface {
 var ErrProjectNotFound = errors.New("project not found")
 var ErrSessionNotFound = errors.New("session not found")
 var ErrSpecNotFound = errors.New("spec not found")
-var ErrSessionFinished = errors.New("session finished")
+var ErrSessionFinished = errors.New("session already finished")
