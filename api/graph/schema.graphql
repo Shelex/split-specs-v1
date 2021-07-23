@@ -54,6 +54,7 @@ type Query {
   nextSpec(sessionId: String!, options: NextOptions): String!
   project(name: String!): Project!
   projects: [String!]!
+  session(sessionId: String!): Session!
 }
 
 type Mutation {

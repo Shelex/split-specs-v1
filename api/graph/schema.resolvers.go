@@ -185,6 +185,23 @@ func (r *queryResolver) Projects(ctx context.Context) ([]string, error) {
 	return r.SplitService.GetProjectList(users.UserToEntityUser(*user))
 }
 
+func (r *queryResolver) Session(ctx context.Context, sessionID string) (*model.Session, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return nil, &users.AccessDeniedError{}
+	}
+	session, err := r.SplitService.Repository.GetSession(sessionID)
+	if err != nil {
+		return nil, err
+	}
+
+	specs, err := r.SplitService.Repository.GetSpecs(sessionID, session.SpecIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to receive specs for session %s: %s", sessionID, err)
+	}
+	return factory.ProjectSessionToApiSession(session, specs), nil
+}
+
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 

@@ -96,6 +96,25 @@ query {
 }
 ```
 
+- query session(sessionId): get session by id
+
+```graphql
+query {
+  session(sessionId: "3e1295e4-b044-4a7a-82a7-b0e71afe70e7") {
+    id
+    start
+    end
+    backlog {
+      file
+      start
+      end
+      estimatedDuration
+      assignedTo
+    }
+  }
+}
+```
+
 - query projects: get list of project names available for current user
 
 ```graphql

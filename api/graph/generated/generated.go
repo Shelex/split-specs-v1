@@ -61,6 +61,7 @@ type ComplexityRoot struct {
 		NextSpec func(childComplexity int, sessionID string, options *model.NextOptions) int
 		Project  func(childComplexity int, name string) int
 		Projects func(childComplexity int) int
+		Session  func(childComplexity int, sessionID string) int
 	}
 
 	Session struct {
@@ -96,6 +97,7 @@ type QueryResolver interface {
 	NextSpec(ctx context.Context, sessionID string, options *model.NextOptions) (string, error)
 	Project(ctx context.Context, name string) (*model.Project, error)
 	Projects(ctx context.Context) ([]string, error)
+	Session(ctx context.Context, sessionID string) (*model.Session, error)
 }
 
 type executableSchema struct {
@@ -224,6 +226,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Projects(childComplexity), true
+
+	case "Query.session":
+		if e.complexity.Query.Session == nil {
+			break
+		}
+
+		args, err := ec.field_Query_session_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Session(childComplexity, args["sessionId"].(string)), true
 
 	case "Session.backlog":
 		if e.complexity.Session.Backlog == nil {
@@ -429,6 +443,7 @@ type Query {
   nextSpec(sessionId: String!, options: NextOptions): String!
   project(name: String!): Project!
   projects: [String!]!
+  session(sessionId: String!): Session!
 }
 
 type Mutation {
@@ -586,6 +601,21 @@ func (ec *executionContext) field_Query_project_args(ctx context.Context, rawArg
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_session_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["sessionId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("sessionId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["sessionId"] = arg0
 	return args, nil
 }
 
@@ -1053,6 +1083,48 @@ func (ec *executionContext) _Query_projects(ctx context.Context, field graphql.C
 	res := resTmp.([]string)
 	fc.Result = res
 	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_session(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_session_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Session(rctx, args["sessionId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Session)
+	fc.Result = res
+	return ec.marshalNSession2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSession(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2917,6 +2989,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				}
 				return res
 			})
+		case "session":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_session(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "__type":
 			out.Values[i] = ec._Query___type(ctx, field)
 		case "__schema":
@@ -3347,6 +3433,10 @@ func (ec *executionContext) marshalNProject2ᚖgithubᚗcomᚋShelexᚋsplitᚑs
 		return graphql.Null
 	}
 	return ec._Project(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNSession2githubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSession(ctx context.Context, sel ast.SelectionSet, v model.Session) graphql.Marshaler {
+	return ec._Session(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNSession2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSession(ctx context.Context, sel ast.SelectionSet, v *model.Session) graphql.Marshaler {
