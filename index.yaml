@@ -1,0 +1,6 @@
+indexes:
+  - kind: sessions
+    properties:
+      - name: projectId
+      - name: end
+        direction: desc

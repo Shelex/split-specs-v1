@@ -46,3 +46,7 @@ deploy:
 .PHONY: browse
 browse: 
 	gcloud app browse
+
+.PHONY: datastore-index
+datastore-index:
+	gcloud datastore indexes create $(PWD)/index.yaml

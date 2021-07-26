@@ -21,6 +21,7 @@ type Storage interface {
 	AttachSessionToProject(projectName string, sessionID string) error
 	EndSession(sessionID string) error
 
+	GetProjectLatestSessions(projectID string, limit int) ([]*entities.Session, error)
 	GetProjectLatestSession(projectID string) (*entities.Session, error)
 	SetProjectLatestSession(projectName string, sessionID string) error
 

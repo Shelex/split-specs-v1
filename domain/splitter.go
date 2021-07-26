@@ -3,6 +3,7 @@ package domain
 import (
 	"errors"
 	"fmt"
+	"math"
 
 	"github.com/Shelex/split-specs/entities"
 	"github.com/Shelex/split-specs/storage"
@@ -90,23 +91,52 @@ func (svc *SplitService) InviteUserToProject(user entities.User, guest string, p
 	return svc.Repository.AttachProjectToUser(guestUser.ID, projectID)
 }
 
+type specHistoryMatch struct {
+	average float64
+	count   int
+}
+
 func (svc *SplitService) EstimateDuration(projectID string, specs []entities.Spec) []entities.Spec {
-	latestSession, err := svc.Repository.GetProjectLatestSession(projectID)
-	if err != nil {
-		return specs
-	}
-	historySpecs, err := svc.Repository.GetSpecs(latestSession.ID, latestSession.SpecIDs)
+	latestSessions, err := svc.Repository.GetProjectLatestSessions(projectID, 5)
 	if err != nil {
 		return specs
 	}
 
-	for idx, spec := range specs {
-		for _, history := range historySpecs {
-			if history.FilePath == spec.FilePath {
-				specs[idx].EstimatedDuration = history.EstimatedDuration
+	var historicalSpecs []entities.Spec
+
+	for _, session := range latestSessions {
+		sessionSpecs, err := svc.Repository.GetSpecs(session.ID, session.SpecIDs)
+		if err != nil {
+			return specs
+		}
+		historicalSpecs = append(historicalSpecs, sessionSpecs...)
+	}
+
+	matches := make(map[string]specHistoryMatch)
+
+	for _, historicalSpec := range historicalSpecs {
+		if historicalSpec.End == 0 {
+			continue
+		}
+		match, ok := matches[historicalSpec.FilePath]
+		if !ok {
+			matches[historicalSpec.FilePath] = specHistoryMatch{
+				average: 0,
+				count:   0,
 			}
 		}
+		match.count = match.count + 1
+		match.average = (match.average + float64(historicalSpec.EstimatedDuration)) / float64(match.count)
+		matches[historicalSpec.FilePath] = match
 	}
+
+	for index, spec := range specs {
+		match, ok := matches[spec.FilePath]
+		if ok {
+			specs[index].EstimatedDuration = int64(math.Round(match.average))
+		}
+	}
+
 	return specs
 }
 

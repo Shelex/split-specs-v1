@@ -108,6 +108,30 @@ func (i *InMem) AttachSessionToProject(projectID string, sessionID string) error
 	return nil
 }
 
+func (i *InMem) GetProjectLatestSessions(projectID string, limit int) ([]*entities.Session, error) {
+	project, ok := i.projects[projectID]
+	if !ok {
+		return nil, ErrProjectNotFound
+	}
+
+	var sessions []*entities.Session
+
+	for _, sessionID := range project.SessionIDs {
+		session, ok := i.sessions[sessionID]
+		if !ok {
+			return nil, ErrSessionNotFound
+		}
+		if session.End != 0 {
+			sessions = append(sessions, session)
+		}
+
+		if len(sessions) >= limit {
+			return sessions, nil
+		}
+	}
+	return sessions, nil
+}
+
 func (i *InMem) GetProjectLatestSession(projectID string) (*entities.Session, error) {
 	project, ok := i.projects[projectID]
 	if !ok {
