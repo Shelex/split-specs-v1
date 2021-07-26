@@ -15,11 +15,13 @@ type Storage interface {
 
 	CreateProject(project entities.Project) error
 	AttachProjectToUser(userID string, projectID string) error
+	DeleteProject(email string, projectID string) error
 
 	GetSession(sessionID string) (entities.Session, error)
 	CreateSession(projectName string, sessionID string, specs []entities.Spec) (*entities.Session, error)
 	AttachSessionToProject(projectName string, sessionID string) error
 	EndSession(sessionID string) error
+	DeleteSession(email string, sessionID string) error
 
 	GetProjectLatestSessions(projectID string, limit int) ([]*entities.Session, error)
 	GetProjectLatestSession(projectID string) (*entities.Session, error)

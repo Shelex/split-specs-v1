@@ -117,6 +117,36 @@ func (r *mutationResolver) ShareProject(ctx context.Context, email string, proje
 	return fmt.Sprintf("shared project %s with %s", projectName, email), nil
 }
 
+func (r *mutationResolver) DeleteSession(ctx context.Context, sessionID string) (string, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return "", &users.AccessDeniedError{}
+	}
+
+	if err := r.SplitService.Repository.DeleteSession(user.Email, sessionID); err != nil {
+		return "", err
+	}
+	return "session deleted", nil
+}
+
+func (r *mutationResolver) DeleteProject(ctx context.Context, projectName string) (string, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return "", &users.AccessDeniedError{}
+	}
+
+	projectID, err := r.SplitService.Repository.GetUserProjectIDByName(user.ID, projectName)
+	if err != nil {
+		return "", err
+	}
+
+	if err := r.SplitService.Repository.DeleteProject(user.Email, projectID); err != nil {
+		return "", err
+	}
+
+	return "project deleted", nil
+}
+
 func (r *queryResolver) NextSpec(ctx context.Context, sessionID string, options *model.NextOptions) (string, error) {
 	if user := auth.ForContext(ctx); user == nil {
 		return "", &users.AccessDeniedError{}

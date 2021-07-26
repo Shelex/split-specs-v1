@@ -249,3 +249,61 @@ func (i *InMem) GetSpecs(sessionID string, ids []string) ([]entities.Spec, error
 	}
 	return specs, nil
 }
+
+func (i *InMem) DeleteProject(email string, projectID string) error {
+	project, ok := i.projects[projectID]
+	if !ok {
+		return ErrProjectNotFound
+	}
+
+	for _, sessionID := range project.SessionIDs {
+		err := i.DeleteSession(email, sessionID)
+		if err != nil {
+			return err
+		}
+	}
+	delete(i.projects, projectID)
+
+	for _, user := range i.users {
+		userHasProject, index := contains(user.ProjectIDs, projectID)
+		if userHasProject {
+			i.users[user.ID].ProjectIDs = remove(i.users[user.ID].ProjectIDs, index)
+		}
+	}
+	return nil
+}
+
+func (i *InMem) DeleteSession(email string, sessionID string) error {
+	session, ok := i.sessions[sessionID]
+	if !ok {
+		return ErrSessionNotFound
+	}
+
+	for _, specID := range session.SpecIDs {
+		delete(i.specs, specID)
+	}
+
+	delete(i.sessions, session.ID)
+
+	for _, project := range i.projects {
+		projectHasSession, index := contains(project.SessionIDs, sessionID)
+		if projectHasSession {
+			i.projects[project.ID].SessionIDs = remove(i.projects[project.ID].SessionIDs, index)
+		}
+	}
+	return nil
+}
+
+func contains(input []string, query string) (bool, int) {
+	for index, item := range input {
+		if item == query {
+			return true, index
+		}
+	}
+	return false, -1
+}
+
+func remove(slice []string, index int) []string {
+	slice[index] = slice[len(slice)-1]
+	return slice[:len(slice)-1]
+}

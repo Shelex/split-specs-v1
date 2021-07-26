@@ -138,3 +138,19 @@ mutation {
   changePassword(input: { password: "admin", newPassword: "ababagalamaga" })
 }
 ```
+
+- mutation deleteSession: delete existing session by id for current user
+
+```graphql
+mutation {
+  deleteSession(sessionId: "vcV8iLiN_Z5rEsMlF8ur1")
+}
+```
+
+- mutation deleteProject: delete existing project by name for current user
+
+```graphql
+mutation {
+  deleteProject(projectName: "test")
+}
+```

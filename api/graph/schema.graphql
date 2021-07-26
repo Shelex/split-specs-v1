@@ -63,6 +63,8 @@ type Mutation {
   login(input: User!): String!
   changePassword(input: ChangePasswordInput!): String!
   shareProject(email: String!, projectName: String!): String!
+  deleteSession(sessionId: String!): String!
+  deleteProject(projectName: String!): String!
 }
 
 schema {

@@ -91,6 +91,28 @@ func (d DataStore) AttachSessionToProject(projectID string, sessionID string) er
 	return nil
 }
 
+func (d DataStore) UnlinkSessionFromProject(projectID string, sessionID string) error {
+	project, err := d.GetProjectByID(projectID)
+	if err != nil {
+		return err
+	}
+
+	projectHasSession, index := contains(project.SessionIDs, sessionID)
+
+	if !projectHasSession {
+		return ErrSessionNotFound
+	}
+
+	project.SessionIDs = remove(project.SessionIDs, index)
+
+	projectKey := datastore.NameKey(projectKind, projectID, nil)
+
+	if _, err := d.Client.Put(d.ctx, projectKey, project); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (d DataStore) GetProjectLatestSessions(projectID string, limit int) ([]*entities.Session, error) {
 	sessionQuery := datastore.NewQuery(sessionKind).Filter("projectId=", projectID).Filter("end>", 0).Order("-end").Limit(limit)
 
@@ -350,6 +372,29 @@ func (d DataStore) AttachProjectToUser(userID string, projectID string) error {
 	return nil
 }
 
+func (d DataStore) UnlinkProjectFromUser(email string, projectID string) error {
+	user, err := d.GetUserByEmail(email)
+
+	if err != nil {
+		return err
+	}
+
+	userHasProject, index := contains(user.ProjectIDs, projectID)
+
+	if !userHasProject {
+		return ErrProjectNotFound
+	}
+
+	user.ProjectIDs = remove(user.ProjectIDs, index)
+
+	userKey := datastore.NameKey(userKind, user.ID, nil)
+
+	if _, err := d.Client.Put(d.ctx, userKey, user); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (d DataStore) GetUserProjects(userID string) ([]string, error) {
 	userKey := datastore.NameKey(userKind, userID, nil)
 
@@ -407,4 +452,71 @@ func (d DataStore) GetSpecs(sessionID string, ids []string) ([]entities.Spec, er
 		return nil, err
 	}
 	return specs, nil
+}
+
+func (d DataStore) DeleteSession(email string, sessionID string) error {
+	sessionKey := datastore.NameKey(sessionKind, sessionID, nil)
+
+	session, err := d.GetSession(sessionID)
+	if err != nil {
+		return err
+	}
+
+	user, err := d.GetUserByEmail(email)
+	if err != nil {
+		return err
+	}
+
+	if userHasSession, _ := contains(user.ProjectIDs, session.ProjectID); !userHasSession {
+		return ErrSessionNotFound
+	}
+
+	if err := d.UnlinkSessionFromProject(session.ProjectID, sessionID); err != nil {
+		return err
+	}
+
+	specKeys := make([]*datastore.Key, len(session.SpecIDs))
+
+	for index, specID := range session.SpecIDs {
+		specKeys[index] = datastore.NameKey(specKind, specID, sessionKey)
+	}
+
+	tx, err := d.Client.NewTransaction(d.ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := tx.DeleteMulti(specKeys); err != nil {
+		return err
+	}
+
+	if err := tx.Delete(sessionKey); err != nil {
+		return err
+	}
+
+	if _, err := tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d DataStore) DeleteProject(email string, projectID string) error {
+	project, err := d.GetProjectByID(projectID)
+	if err != nil {
+		return ErrProjectNotFound
+	}
+
+	if err := d.UnlinkProjectFromUser(email, projectID); err != nil {
+		return err
+	}
+
+	for _, sessionID := range project.SessionIDs {
+		if err := d.DeleteSession(email, sessionID); err != nil {
+			return err
+		}
+	}
+
+	projectKey := datastore.NameKey(projectKind, projectID, nil)
+
+	return d.Client.Delete(d.ctx, projectKey)
 }
