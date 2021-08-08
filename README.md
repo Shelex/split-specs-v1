@@ -5,8 +5,9 @@ Could be used to make concurrent machines that run your tests much equal in dura
 
 # Use
 
-- [Graphql Playground](https://split-specs.appspot.com/playground)
-- [API Endpoint /query](https://split-specs.appspot.com/query)
+- [Minimalistic web UI](https://split-specs.appspot.com) along with
+  - [Graphql Playground](https://split-specs.appspot.com/playground)
+  - [API Endpoint /query](https://split-specs.appspot.com/query)
 
 # Flow
 
