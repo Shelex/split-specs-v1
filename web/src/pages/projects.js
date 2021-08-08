@@ -16,9 +16,10 @@ const Projects = () => {
             {data?.projects.length ? (
                 <div className="max-w-7xl px-4 mx-auto mt-8">
                     <div className="text-2xl">Available projects:</div>
-                    <ul>
+                    <br />
+                    <div className="grid gap-3 grid-cols-4">
                         {data.projects.map((project) => ProjectItem(project))}
-                    </ul>
+                    </div>
                 </div>
             ) : (
                 <ProjectsEmpty />
@@ -55,9 +56,14 @@ const ProjectsEmpty = () => {
 
 const ProjectItem = (name) => {
     return (
-        <li key={name}>
-            <Link to={`/project/${name}`}>{name}</Link>
-        </li>
+        <Link to={`/project/${name}`} className="c">
+            <div
+                key={name}
+                className="rounded-md py-3 px-6 inline-block border-2 border-blue-600 items-center"
+            >
+                <p className="align-middle ">{name}</p>
+            </div>
+        </Link>
     );
 };
 
