@@ -1,19 +1,5 @@
 runtime: go115
 
 handlers:
-  - url: /query
+  - url: .*
     script: auto
-
-  - url: /playground
-    script: auto
-
-  - url: /favicon.ico
-    static_files: web/build/favicon.ico
-    upload: web/build/favicon.ico
-
-  - url: /
-    static_files: web/build/index.html
-    upload: web/build/index.html
-
-  - url: /
-    static_dir: web/build

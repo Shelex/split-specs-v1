@@ -4,8 +4,10 @@ import { useMutation } from '@apollo/client';
 import { isLoggedInVar } from '../apollo';
 import { SIGN_UP } from '../apollo/mutation';
 
+import Spinner from '../components/Spinner';
+
 const SignUpForm = ({ history }) => {
-    const [signUp, { error }] = useMutation(SIGN_UP, {
+    const [signUp, { error, loading }] = useMutation(SIGN_UP, {
         onCompleted: (data) => {
             localStorage.setItem('token', data.register);
             isLoggedInVar(true);
@@ -104,7 +106,7 @@ const SignUpForm = ({ history }) => {
                         type="submit"
                         className="bg-blue-800 w-full py-3 rounded-md text-white hover:bg-blue-900 focus:outline-none disabled:opacity-50"
                     >
-                        Submit
+                        {loading ? <Spinner /> : `Sign up`}
                     </button>
                 </div>
             </div>

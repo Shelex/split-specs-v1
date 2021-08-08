@@ -1,12 +1,17 @@
 import { memo } from 'react';
 import { useQuery } from '@apollo/client';
 import { displayTimestamp, secondsToDuration } from '../dates/displayDate';
+import Loading from '../components/Loading';
 
 import { GET_SESSION } from '../apollo/query';
 
 const Session = ({ match }) => {
     const { id } = match.params;
-    const { data } = useQuery(GET_SESSION, { variables: { id } });
+    const { data, loading } = useQuery(GET_SESSION, { variables: { id } });
+
+    if (loading) {
+        return <Loading />;
+    }
 
     const session = data?.session;
 

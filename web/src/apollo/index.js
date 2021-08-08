@@ -2,12 +2,14 @@ import {
     ApolloClient,
     createHttpLink,
     InMemoryCache,
-    makeVar
+    makeVar,
+    from
 } from '@apollo/client';
 import { onError } from '@apollo/client/link/error';
 import { setContext } from '@apollo/client/link/context';
 
 const token = () => localStorage.getItem('token');
+const unsetToken = () => localStorage.removeItem('token');
 
 const httpLink = createHttpLink({
     uri: 'https://split-specs.appspot.com/query'
@@ -19,11 +21,15 @@ const errorLink = onError(({ graphQLErrors, networkError, response }) => {
     }
 
     if (graphQLErrors) {
-        graphQLErrors.map(({ message, locations, path }) =>
-            console.error(
+        graphQLErrors.map(({ message, locations, path }) => {
+            window.location.href = '/';
+            if (message.includes('access denied')) {
+                unsetToken();
+            }
+            return alert(
                 `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
-            )
-        );
+            );
+        });
     }
 });
 
@@ -49,7 +55,7 @@ const cache = new InMemoryCache({
 });
 
 const client = new ApolloClient({
-    link: errorLink.concat(authLink.concat(httpLink)),
+    link: from([errorLink, authLink, httpLink]),
     cache
 });
 

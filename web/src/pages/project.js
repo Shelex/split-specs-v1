@@ -1,15 +1,20 @@
 import { memo } from 'react';
 import { useQuery } from '@apollo/client';
 import { Link } from 'react-router-dom';
+import Loading from '../components/Loading';
 import { displayTimestamp, secondsToDuration } from '../dates/displayDate';
 
 import { GET_PROJECT } from '../apollo/query';
 
 const Project = ({ match }) => {
     const { name } = match.params;
-    const { data } = useQuery(GET_PROJECT, {
+    const { data, loading } = useQuery(GET_PROJECT, {
         variables: { name }
     });
+
+    if (loading) {
+        return <Loading />;
+    }
 
     const project = data?.project;
 

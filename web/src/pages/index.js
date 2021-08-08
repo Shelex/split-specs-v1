@@ -6,6 +6,7 @@ import { isLoggedInVar } from '../apollo';
 import Layout from '../components/Layout';
 import Home from './home';
 import SignUp from './signup';
+import Projects from './projects';
 import Project from './project';
 import Session from './session';
 
@@ -20,6 +21,7 @@ const Index = () => {
 
                 {isLoggedIn ? (
                     <>
+                        <Route path="/projects/" component={Projects} />
                         <Route path="/project/:name" component={Project} />
                         <Route path="/session/:id" component={Session} />
                     </>

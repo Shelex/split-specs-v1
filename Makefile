@@ -44,7 +44,7 @@ web-dev:
 
 .PHONY: web-build
 web-build: 
-	cd web && yarn build
+	cd web && rm -rf build && yarn build
 
 .PHONY: deploy
 deploy: 
