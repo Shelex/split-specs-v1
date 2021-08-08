@@ -38,6 +38,14 @@ deps:
 dev: 
 	dev_appserver.py . --clear_datastore=yes --port=9999
 
+.PHONY: web-dev
+web-dev: 
+	cd web && yarn start
+
+.PHONY: web-build
+web-build: 
+	cd web && yarn build
+
 .PHONY: deploy
 deploy: 
 	make lint

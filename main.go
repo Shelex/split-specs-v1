@@ -16,6 +16,7 @@ import (
 	"github.com/Shelex/split-specs/storage"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 )
 
 const defaultPort = "8080"
@@ -53,6 +54,16 @@ func Start() error {
 	router := chi.NewRouter()
 	router.Use(auth.Middleware(), middleware.Logger)
 
+	router.Use(cors.Handler(cors.Options{
+		AllowedOrigins:     []string{"https://*", "http://*"},
+		AllowedMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:     []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token", "X-PINGOTHER"},
+		ExposedHeaders:     []string{"Link"},
+		OptionsPassthrough: true,
+		AllowCredentials:   false,
+		MaxAge:             300,
+	}))
+
 	gql := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{
 		Resolvers: graph.NewResolver(svc),
 	}))
@@ -63,6 +74,8 @@ func Start() error {
 
 	router.Handle("/query", (gql))
 	router.Handle("/playground", playground.Handler("GraphQL playground", "/query"))
+
+	FileServer(router)
 
 	startMessage(port)
 
@@ -90,4 +103,18 @@ func InitDb() (storage.Storage, error) {
 	}
 
 	return repo, nil
+}
+
+// FileServer is serving static folder built from web page sources
+func FileServer(router *chi.Mux) {
+	root := "./web/build"
+	fs := http.FileServer(http.Dir(root))
+
+	router.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		if _, err := os.Stat(root + r.RequestURI); os.IsNotExist(err) {
+			http.StripPrefix(r.RequestURI, fs).ServeHTTP(w, r)
+		} else {
+			fs.ServeHTTP(w, r)
+		}
+	})
 }

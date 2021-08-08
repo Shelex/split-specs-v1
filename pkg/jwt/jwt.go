@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"crypto/rsa"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"time"
@@ -69,12 +70,16 @@ func ParseToken(tokenStr string) (users.User, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
 		return verifyKey, nil
 	})
+
+	if err != nil {
+		return users.User{}, err
+	}
+
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return users.User{
 			Email: claims["email"].(string),
 			ID:    claims["id"].(string),
 		}, nil
-	} else {
-		return users.User{}, err
 	}
+	return users.User{}, fmt.Errorf("could not parse claims from jwt token")
 }
