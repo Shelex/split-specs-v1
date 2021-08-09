@@ -1,10 +1,15 @@
 package entities
 
 type User struct {
-	ID         string   `datastore:"id"`
-	Email      string   `datastore:"email"`
-	Password   string   `datastore:"password"`
-	ProjectIDs []string `datastore:"projectIds"`
+	ID       string `datastore:"id"`
+	Email    string `datastore:"email"`
+	Password string `datastore:"password"`
+}
+
+type UserProject struct {
+	ID        string `datastore:"id"`
+	UserID    string `datastore:"userId"`
+	ProjectID string `datastore:"projectId"`
 }
 
 type Session struct {

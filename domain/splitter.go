@@ -136,7 +136,7 @@ func (svc *SplitService) EstimateDuration(projectID string, specs []entities.Spe
 }
 
 func (svc *SplitService) GetProjectList(user entities.User) ([]string, error) {
-	projectIds, err := svc.Repository.GetUserProjects(user.ID)
+	projectIds, err := svc.Repository.GetUserProjectIDs(user.ID)
 	if err != nil {
 		return []string{}, err
 	}
@@ -178,7 +178,7 @@ func (svc *SplitService) Next(sessionID string, machineID string, isPreviousSpec
 		return "", ErrSessionFinished
 	}
 
-	if err := svc.Repository.StartSpec(sessionID, machineID, spec.FilePath); err != nil {
+	if err := svc.Repository.StartSpec(sessionID, machineID, spec.ID); err != nil {
 		return "", fmt.Errorf("failed to start spec: %s", err)
 	}
 

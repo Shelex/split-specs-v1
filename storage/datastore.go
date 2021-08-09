@@ -15,6 +15,7 @@ const (
 	DATASTORE_PROJECT_ID = "split-specs"
 	userKind             = "users"
 	projectKind          = "projects"
+	userProjectKind      = "user-project"
 	sessionKind          = "sessions"
 	specKind             = "specs"
 )
@@ -97,6 +98,7 @@ func (d DataStore) GetProjectLatestSession(projectID string) (*entities.Session,
 	}
 	return &session, nil
 }
+
 func (d DataStore) SetProjectLatestSession(projectID string, sessionID string) error {
 	project, err := d.GetProjectByID(projectID)
 	if err != nil {
@@ -113,24 +115,15 @@ func (d DataStore) SetProjectLatestSession(projectID string, sessionID string) e
 	return nil
 }
 
-func (d DataStore) StartSpec(sessionID string, machineID string, specName string) error {
+func (d DataStore) StartSpec(sessionID string, machineID string, specID string) error {
 	session, err := d.GetSession(sessionID)
 	if err != nil {
 		return err
 	}
 
-	specs, err := d.GetSpecs(sessionID)
+	startedSpec, err := d.GetSpec(specID)
 	if err != nil {
 		return err
-	}
-
-	var startedSpec entities.Spec
-
-	for _, spec := range specs {
-		if spec.FilePath == specName {
-			startedSpec = spec
-			break
-		}
 	}
 
 	if startedSpec.FilePath == "" {
@@ -140,18 +133,18 @@ func (d DataStore) StartSpec(sessionID string, machineID string, specName string
 	startedSpec.Start = time.Now().Unix()
 	startedSpec.AssignedTo = machineID
 
-	if session.Start == 0 {
-		session.Start = time.Now().Unix()
-	}
-
 	tx, err := d.Client.NewTransaction(d.ctx)
 	if err != nil {
 		return err
 	}
+
 	sessionKey := datastore.NameKey(sessionKind, session.ID, nil)
 
-	if _, err := tx.Put(sessionKey, &session); err != nil {
-		return fmt.Errorf("failed to write session start: %s", err)
+	if session.Start == 0 {
+		session.Start = time.Now().Unix()
+		if _, err := tx.Put(sessionKey, &session); err != nil {
+			return fmt.Errorf("failed to write session start: %s", err)
+		}
 	}
 
 	specKey := datastore.NameKey(specKind, startedSpec.ID, sessionKey)
@@ -164,6 +157,7 @@ func (d DataStore) StartSpec(sessionID string, machineID string, specName string
 	}
 	return nil
 }
+
 func (d DataStore) EndSpec(sessionID string, machineID string, isPassed bool) error {
 	session, _ := d.GetSession(sessionID)
 	if session.ID == "" {
@@ -200,6 +194,7 @@ func (d DataStore) EndSpec(sessionID string, machineID string, isPassed bool) er
 	}
 	return nil
 }
+
 func (d DataStore) GetSession(sessionID string) (entities.Session, error) {
 	sessionQuery := datastore.NewQuery(sessionKind).Filter("id=", sessionID).Limit(1)
 
@@ -259,35 +254,22 @@ func (d DataStore) GetUserByEmail(email string) (*entities.User, error) {
 }
 
 func (d DataStore) GetUserProjectIDByName(userID string, projectName string) (string, error) {
-	userKey := datastore.NameKey(userKind, userID, nil)
-
-	var user entities.User
-
-	err := d.Client.Get(d.ctx, userKey, &user)
-	if len(user.ProjectIDs) == 0 {
-		return "", ErrProjectNotFound
-	}
+	projectIDs, err := d.GetUserProjectIDs(userID)
 	if err != nil {
 		return "", err
 	}
 
-	projectKeys := make([]*datastore.Key, len(user.ProjectIDs))
-
-	for index, projectID := range user.ProjectIDs {
-		projectKeys[index] = datastore.NameKey(projectKind, projectID, nil)
-	}
-
-	projects := make([]entities.Project, len(user.ProjectIDs))
-
-	if err := d.Client.GetMulti(d.ctx, projectKeys, projects); err != nil {
-		return "", err
-	}
-
-	for _, project := range projects {
+	for _, id := range projectIDs {
+		project, err := d.GetProjectByID(id)
+		if err != nil {
+			return "", err
+		}
 		if project.Name == projectName {
 			return project.ID, nil
 		}
+
 	}
+
 	return "", ErrProjectNotFound
 }
 
@@ -306,53 +288,87 @@ func (d DataStore) GetProjectByID(ID string) (*entities.Project, error) {
 func (d DataStore) AttachProjectToUser(userID string, projectID string) error {
 	userKey := datastore.NameKey(userKind, userID, nil)
 
-	var user entities.User
-	if err := d.Client.Get(d.ctx, userKey, &user); err != nil {
-		return err
-	}
-
-	if user.ProjectIDs == nil {
-		user.ProjectIDs = []string{projectID}
-	} else {
-		user.ProjectIDs = append(user.ProjectIDs, projectID)
-	}
-	if _, err := d.Client.Put(d.ctx, userKey, &user); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (d DataStore) UnlinkProjectFromUser(email string, projectID string) error {
-	user, err := d.GetUserByEmail(email)
-
+	id, err := gonanoid.New()
 	if err != nil {
 		return err
 	}
 
-	userHasProject, index := contains(user.ProjectIDs, projectID)
-
-	if !userHasProject {
-		return ErrProjectNotFound
+	userProject := entities.UserProject{
+		ID:        id,
+		UserID:    userID,
+		ProjectID: projectID,
 	}
 
-	user.ProjectIDs = remove(user.ProjectIDs, index)
+	userProjectKey := datastore.NameKey(userProjectKind, id, userKey)
 
-	userKey := datastore.NameKey(userKind, user.ID, nil)
-
-	if _, err := d.Client.Put(d.ctx, userKey, user); err != nil {
+	if _, err := d.Client.Put(d.ctx, userProjectKey, &userProject); err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (d DataStore) GetUserProjects(userID string) ([]string, error) {
-	userKey := datastore.NameKey(userKind, userID, nil)
+func (d DataStore) GetProjectUsers(projectID string) ([]string, error) {
+	userProjectsQuery := datastore.NewQuery(userProjectKind).Filter("projectId=", projectID)
 
-	var user entities.User
-	if err := d.Client.Get(d.ctx, userKey, &user); err != nil {
+	var userProjects []entities.UserProject
+
+	if _, err := d.Client.GetAll(d.ctx, userProjectsQuery, &userProjects); err != nil {
 		return nil, err
 	}
-	return user.ProjectIDs, nil
+
+	userIDs := make([]string, len(userProjects))
+
+	for index, project := range userProjects {
+		userIDs[index] = project.UserID
+	}
+
+	return userIDs, nil
+}
+
+func (d DataStore) UnlinkProjectFromUser(userID string, projectID string) error {
+	userKey := datastore.NameKey(userKind, userID, nil)
+
+	userProjectsQuery := datastore.NewQuery(userProjectKind).Ancestor(userKey)
+
+	var projects []entities.UserProject
+
+	if _, err := d.Client.GetAll(d.ctx, userProjectsQuery, &projects); err != nil {
+		return err
+	}
+
+	var unlinkProject entities.UserProject
+
+	for _, project := range projects {
+		if project.ProjectID == projectID {
+			unlinkProject = project
+			break
+		}
+	}
+
+	unlinkKey := datastore.NameKey(userProjectKind, unlinkProject.ID, userKey)
+
+	return d.Client.Delete(d.ctx, unlinkKey)
+}
+
+func (d DataStore) GetUserProjectIDs(userID string) ([]string, error) {
+	userKey := datastore.NameKey(userKind, userID, nil)
+
+	userProjectsQuery := datastore.NewQuery(userProjectKind).Ancestor(userKey)
+
+	var projects []entities.UserProject
+
+	if _, err := d.Client.GetAll(d.ctx, userProjectsQuery, &projects); err != nil {
+		return nil, err
+	}
+
+	ids := make([]string, len(projects))
+
+	for index, project := range projects {
+		ids[index] = project.ProjectID
+	}
+
+	return ids, nil
 }
 
 func (d DataStore) UpdatePassword(userID string, newPassword string) error {
@@ -389,6 +405,22 @@ func (d DataStore) CreateSpecs(sessionID string, specs []entities.Spec) error {
 	return nil
 }
 
+func (d DataStore) GetSpec(specID string) (entities.Spec, error) {
+	specQuery := datastore.NewQuery(specKind).Filter("id=", specID).Limit(1)
+
+	var specs []entities.Spec
+
+	if _, err := d.Client.GetAll(d.ctx, specQuery, &specs); err != nil {
+		return entities.Spec{}, err
+	}
+
+	if len(specs) == 0 {
+		return entities.Spec{}, ErrSessionNotFound
+	}
+
+	return specs[0], nil
+}
+
 func (d DataStore) GetSpecs(sessionID string) ([]entities.Spec, error) {
 	sessionKey := datastore.NameKey(sessionKind, sessionID, nil)
 	query := datastore.NewQuery(specKind).Ancestor(sessionKey)
@@ -414,7 +446,14 @@ func (d DataStore) DeleteSession(email string, sessionID string) error {
 		return err
 	}
 
-	if userHasSession, _ := contains(user.ProjectIDs, session.ProjectID); !userHasSession {
+	users, err := d.GetProjectUsers(session.ProjectID)
+	if err != nil {
+		return err
+	}
+
+	hasAccess, _ := contains(users, user.ID)
+
+	if !hasAccess {
 		return ErrSessionNotFound
 	}
 
@@ -449,24 +488,40 @@ func (d DataStore) DeleteSession(email string, sessionID string) error {
 }
 
 func (d DataStore) DeleteProject(email string, projectID string) error {
-	if err := d.UnlinkProjectFromUser(email, projectID); err != nil {
-		return err
-	}
-
-	sessions, err := d.GetProjectSessions(projectID)
+	user, err := d.GetUserByEmail(email)
 	if err != nil {
 		return err
 	}
 
-	for _, session := range sessions {
-		if err := d.DeleteSession(email, session.ID); err != nil {
-			return err
-		}
+	projectUsers, err := d.GetProjectUsers(projectID)
+	if err != nil {
+		return err
 	}
 
-	projectKey := datastore.NameKey(projectKind, projectID, nil)
+	hasAccess, _ := contains(projectUsers, user.ID)
 
-	return d.Client.Delete(d.ctx, projectKey)
+	if !hasAccess {
+		return ErrProjectNotFound
+	}
+
+	if len(projectUsers) == 1 {
+		sessions, err := d.GetProjectSessions(projectID)
+		if err != nil {
+			return err
+		}
+
+		for _, session := range sessions {
+			if err := d.DeleteSession(email, session.ID); err != nil {
+				return err
+			}
+		}
+
+		projectKey := datastore.NameKey(projectKind, projectID, nil)
+
+		return d.Client.Delete(d.ctx, projectKey)
+	}
+
+	return d.UnlinkProjectFromUser(user.ID, projectID)
 }
 
 func (d DataStore) GetSessionWithSpecs(sessionID string) (entities.SessionWithSpecs, error) {

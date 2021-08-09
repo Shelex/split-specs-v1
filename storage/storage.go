@@ -11,12 +11,13 @@ var DB Storage
 type Storage interface {
 	GetProjectByID(ID string) (*entities.Project, error)
 	GetUserProjectIDByName(userID string, projectName string) (string, error)
-	GetUserProjects(userID string) ([]string, error)
+	GetUserProjectIDs(userID string) ([]string, error)
 
 	CreateProject(project entities.Project) error
 	AttachProjectToUser(userID string, projectID string) error
 	DeleteProject(email string, projectID string) error
 	GetProjectSessions(projectID string) ([]entities.SessionWithSpecs, error)
+	GetProjectUsers(projectID string) ([]string, error)
 
 	GetSession(sessionID string) (entities.Session, error)
 	GetSessionWithSpecs(sessionID string) (entities.SessionWithSpecs, error)
@@ -29,8 +30,9 @@ type Storage interface {
 	SetProjectLatestSession(projectName string, sessionID string) error
 
 	CreateSpecs(sessionID string, specs []entities.Spec) error
+	GetSpec(specID string) (entities.Spec, error)
 	GetSpecs(sessionID string) ([]entities.Spec, error)
-	StartSpec(sessionID string, machineID string, specName string) error
+	StartSpec(sessionID string, machineID string, specID string) error
 	EndSpec(sessionID string, machineID string, isPassed bool) error
 
 	//auth

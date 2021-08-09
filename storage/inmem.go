@@ -9,18 +9,20 @@ import (
 )
 
 type InMem struct {
-	sessions map[string]*entities.Session
-	projects map[string]*entities.Project
-	users    map[string]*entities.User
-	specs    map[string]*entities.Spec
+	sessions     map[string]*entities.Session
+	projects     map[string]*entities.Project
+	users        map[string]*entities.User
+	specs        map[string]*entities.Spec
+	userProjects map[string]*entities.UserProject
 }
 
 func NewInMemStorage() (Storage, error) {
 	DB = &InMem{
-		sessions: map[string]*entities.Session{},
-		projects: map[string]*entities.Project{},
-		users:    map[string]*entities.User{},
-		specs:    map[string]*entities.Spec{},
+		sessions:     map[string]*entities.Session{},
+		projects:     map[string]*entities.Project{},
+		users:        map[string]*entities.User{},
+		specs:        map[string]*entities.Spec{},
+		userProjects: map[string]*entities.UserProject{},
 	}
 	return DB, nil
 }
@@ -44,21 +46,32 @@ func (i *InMem) GetUserByEmail(email string) (*entities.User, error) {
 	return nil, fmt.Errorf("user not found")
 }
 
-func (i *InMem) GetUserProjects(userID string) ([]string, error) {
-	return i.users[userID].ProjectIDs, nil
+func (i *InMem) GetUserProjectIDs(userID string) ([]string, error) {
+	var projectIds []string
+	for _, userProject := range i.userProjects {
+		if userProject.UserID == userID {
+			projectIds = append(projectIds, userProject.ProjectID)
+		}
+	}
+	return projectIds, nil
 }
 
 func (i *InMem) GetUserProjectIDByName(userID string, projectName string) (string, error) {
-	user, ok := i.users[userID]
-	if !ok {
-		return "", fmt.Errorf("user not found")
+	projectIds, err := i.GetUserProjectIDs(userID)
+	if err != nil {
+		return "", err
 	}
-	for _, ID := range user.ProjectIDs {
-		project, err := i.GetProjectByID(ID)
-		if err == nil && project.Name == projectName {
+
+	for _, id := range projectIds {
+		project, err := i.GetProjectByID(id)
+		if err != nil {
+			return "", err
+		}
+		if project.Name == projectName {
 			return project.ID, nil
 		}
 	}
+
 	return "", ErrProjectNotFound
 }
 
@@ -76,8 +89,38 @@ func (i *InMem) CreateProject(project entities.Project) error {
 }
 
 func (i *InMem) AttachProjectToUser(userID string, projectID string) error {
-	i.users[userID].ProjectIDs = append(i.users[userID].ProjectIDs, projectID)
+	users, err := i.GetProjectUsers(projectID)
+	if err != nil {
+		return err
+	}
+
+	hasAccess, _ := contains(users, userID)
+	if hasAccess {
+		return nil
+	}
+
+	id, err := gonanoid.New()
+	if err != nil {
+		return err
+	}
+
+	userProject := entities.UserProject{
+		ID:        id,
+		UserID:    userID,
+		ProjectID: projectID,
+	}
+	i.userProjects[id] = &userProject
 	return nil
+}
+
+func (i *InMem) GetProjectUsers(projectID string) ([]string, error) {
+	var userIDs []string
+	for _, userProject := range i.userProjects {
+		if userProject.ProjectID == projectID {
+			userIDs = append(userIDs, userProject.UserID)
+		}
+	}
+	return userIDs, nil
 }
 
 func (i *InMem) CreateSession(projectID string, sessionID string, specs []entities.Spec) (*entities.Session, error) {
@@ -156,27 +199,23 @@ func (i *InMem) GetSession(sessionID string) (entities.Session, error) {
 	return *session, nil
 }
 
-func (i *InMem) StartSpec(sessionID string, machineID string, specName string) error {
+func (i *InMem) StartSpec(sessionID string, machineID string, specID string) error {
 	session, err := i.GetSession(sessionID)
 	if err != nil {
 		return err
 	}
 
-	specs, err := i.GetSpecs(sessionID)
+	spec, err := i.GetSpec(specID)
 	if err != nil {
 		return err
 	}
 
-	for _, spec := range specs {
-		if spec.FilePath == specName {
-			if session.Start == 0 {
-				i.sessions[sessionID].Start = time.Now().Unix()
-			}
-			i.specs[spec.ID].Start = time.Now().Unix()
-			i.specs[spec.ID].AssignedTo = machineID
-			return nil
-		}
+	if session.Start == 0 {
+		i.sessions[sessionID].Start = time.Now().Unix()
 	}
+
+	i.specs[spec.ID].Start = time.Now().Unix()
+	i.specs[spec.ID].AssignedTo = machineID
 	return nil
 }
 
@@ -222,6 +261,16 @@ func (i *InMem) CreateSpecs(sessionID string, specs []entities.Spec) error {
 	return nil
 }
 
+func (i *InMem) GetSpec(specID string) (entities.Spec, error) {
+	spec, ok := i.specs[specID]
+
+	if !ok {
+		return entities.Spec{}, ErrSpecNotFound
+	}
+
+	return *spec, nil
+}
+
 func (i *InMem) GetSpecs(sessionID string) ([]entities.Spec, error) {
 	var specs []entities.Spec
 
@@ -235,24 +284,35 @@ func (i *InMem) GetSpecs(sessionID string) ([]entities.Spec, error) {
 }
 
 func (i *InMem) DeleteProject(email string, projectID string) error {
-	projectSessions, err := i.GetProjectSessions(projectID)
+	user, err := i.GetUserByEmail(email)
 	if err != nil {
 		return err
 	}
 
-	for _, session := range projectSessions {
-		err := i.DeleteSession(email, session.ID)
+	users, err := i.GetProjectUsers(projectID)
+	if err != nil {
+		return err
+	}
+
+	hasAccess, _ := contains(users, user.ID)
+	if !hasAccess {
+		return ErrProjectNotFound
+	}
+
+	// this is last user of this project so we can remove it completely
+	if len(users) == 1 {
+		projectSessions, err := i.GetProjectSessions(projectID)
 		if err != nil {
 			return err
 		}
-	}
-	delete(i.projects, projectID)
 
-	for _, user := range i.users {
-		userHasProject, index := contains(user.ProjectIDs, projectID)
-		if userHasProject {
-			i.users[user.ID].ProjectIDs = remove(i.users[user.ID].ProjectIDs, index)
+		for _, session := range projectSessions {
+			err := i.DeleteSession(email, session.ID)
+			if err != nil {
+				return err
+			}
 		}
+		delete(i.projects, projectID)
 	}
 	return nil
 }
@@ -316,9 +376,4 @@ func contains(input []string, query string) (bool, int) {
 		}
 	}
 	return false, -1
-}
-
-func remove(slice []string, index int) []string {
-	slice[index] = slice[len(slice)-1]
-	return slice[:len(slice)-1]
 }
