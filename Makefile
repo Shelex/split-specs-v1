@@ -36,7 +36,7 @@ deps:
 
 .PHONY: dev
 dev: 
-	dev_appserver.py . --clear_datastore=yes --port=9999
+	dev_appserver.py app_dev.yaml --clear_datastore=yes --port=9999
 
 .PHONY: web-dev
 web-dev: 
