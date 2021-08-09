@@ -184,26 +184,15 @@ func (r *queryResolver) Project(ctx context.Context, name string) (*model.Projec
 		return nil, err
 	}
 
-	sessions := make([]*model.Session, len(project.SessionIDs))
-
-	for index, sessionID := range project.SessionIDs {
-		session, err := r.SplitService.Repository.GetSession(sessionID)
-		if err != nil {
-			return nil, err
-		}
-
-		specs, err := r.SplitService.Repository.GetSpecs(sessionID, session.SpecIDs)
-		if err != nil {
-			return nil, err
-		}
-
-		sessions[index] = factory.ProjectSessionToApiSession(session, specs)
+	sessions, err := r.SplitService.Repository.GetProjectSessions(projectID)
+	if err != nil {
+		return nil, err
 	}
 
 	return &model.Project{
 		ProjectName:   name,
 		LatestSession: &project.LatestSession,
-		Sessions:      sessions,
+		Sessions:      factory.ProjectSessionsToApiSessions(sessions),
 	}, nil
 }
 
@@ -220,16 +209,12 @@ func (r *queryResolver) Session(ctx context.Context, sessionID string) (*model.S
 	if user == nil {
 		return nil, &users.AccessDeniedError{}
 	}
-	session, err := r.SplitService.Repository.GetSession(sessionID)
+	session, err := r.SplitService.Repository.GetSessionWithSpecs(sessionID)
 	if err != nil {
 		return nil, err
 	}
 
-	specs, err := r.SplitService.Repository.GetSpecs(sessionID, session.SpecIDs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to receive specs for session %s: %s", sessionID, err)
-	}
-	return factory.ProjectSessionToApiSession(session, specs), nil
+	return factory.ProjectSessionToApiSession(session), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

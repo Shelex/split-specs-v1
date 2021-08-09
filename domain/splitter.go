@@ -48,10 +48,6 @@ func (svc *SplitService) AddSession(userID string, projectName string, sessionID
 		return err
 	}
 
-	if err := svc.Repository.AttachSessionToProject(projectID, sessionID); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -59,9 +55,8 @@ func (svc *SplitService) AddProject(userID string, projectName string, sessionID
 	id, _ := gonanoid.New()
 
 	if err := svc.Repository.CreateProject(entities.Project{
-		ID:         id,
-		Name:       projectName,
-		SessionIDs: []string{sessionID},
+		ID:   id,
+		Name: projectName,
 	}); err != nil {
 		return "", err
 	}
@@ -105,7 +100,7 @@ func (svc *SplitService) EstimateDuration(projectID string, specs []entities.Spe
 	var historicalSpecs []entities.Spec
 
 	for _, session := range latestSessions {
-		sessionSpecs, err := svc.Repository.GetSpecs(session.ID, session.SpecIDs)
+		sessionSpecs, err := svc.Repository.GetSpecs(session.ID)
 		if err != nil {
 			return specs
 		}
@@ -165,21 +160,13 @@ func (svc *SplitService) Next(sessionID string, machineID string, isPreviousSpec
 		}
 	}
 
-	session, err := svc.Repository.GetSession(sessionID)
-
-	if err != nil && err.Error() == datastore.ErrNoSuchEntity.Error() {
-		return "", storage.ErrSessionNotFound
-	}
-	if err != nil {
-		return "", fmt.Errorf("failed to get session: %s", err)
-	}
-	if len(session.SpecIDs) == 0 {
-		return "", fmt.Errorf("backlog for session %s is empty", sessionID)
-	}
-
-	specs, err := svc.Repository.GetSpecs(sessionID, session.SpecIDs)
+	specs, err := svc.Repository.GetSpecs(sessionID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get specs: %s", err)
+	}
+
+	if len(specs) == 0 {
+		return "", fmt.Errorf("backlog for session %s is empty", sessionID)
 	}
 
 	spec := svc.CalculateNext(specs)

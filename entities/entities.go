@@ -8,26 +8,24 @@ type User struct {
 }
 
 type Session struct {
-	ID        string   `datastore:"id"`
-	ProjectID string   `datastore:"projectId"`
-	SpecIDs   []string `datastore:"specIds"`
-	Start     int64    `datastore:"start"`
-	End       int64    `datastore:"end"`
+	ID        string `datastore:"id"`
+	ProjectID string `datastore:"projectId"`
+	Start     int64  `datastore:"start"`
+	End       int64  `datastore:"end"`
 }
 
 type SessionWithSpecs struct {
-	ID        string
-	ProjectID string
+	ID        string `datastore:"id"`
+	ProjectID string `datastore:"projectId"`
 	Specs     []Spec
-	Start     int64
-	End       int64
+	Start     int64 `datastore:"start"`
+	End       int64 `datastore:"end"`
 }
 
 type Project struct {
-	ID            string   `datastore:"id"`
-	Name          string   `datastore:"name"`
-	SessionIDs    []string `datastore:"sessionIds"`
-	LatestSession string   `datastore:"latestSession"`
+	ID            string `datastore:"id"`
+	Name          string `datastore:"name"`
+	LatestSession string `datastore:"latestSession"`
 }
 
 type ProjectFull struct {

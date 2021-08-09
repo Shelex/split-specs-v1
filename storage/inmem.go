@@ -85,14 +85,13 @@ func (i *InMem) CreateSession(projectID string, sessionID string, specs []entiti
 		return nil, fmt.Errorf("[repository]: session id already in use for project %s", projectID)
 	}
 
-	specIds, err := i.CreateSpecs(sessionID, specs)
+	err := i.CreateSpecs(sessionID, specs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create specs")
 	}
 
 	session := &entities.Session{
 		ID:        sessionID,
-		SpecIDs:   specIds,
 		ProjectID: projectID,
 	}
 
@@ -100,24 +99,16 @@ func (i *InMem) CreateSession(projectID string, sessionID string, specs []entiti
 	return session, nil
 }
 
-func (i *InMem) AttachSessionToProject(projectID string, sessionID string) error {
-	if _, ok := i.projects[projectID]; !ok {
-		return ErrProjectNotFound
-	}
-	i.projects[projectID].SessionIDs = append(i.projects[projectID].SessionIDs, sessionID)
-	return nil
-}
-
 func (i *InMem) GetProjectLatestSessions(projectID string, limit int) ([]*entities.Session, error) {
-	project, ok := i.projects[projectID]
-	if !ok {
-		return nil, ErrProjectNotFound
-	}
-
 	var sessions []*entities.Session
 
-	for _, sessionID := range project.SessionIDs {
-		session, ok := i.sessions[sessionID]
+	projectSessions, err := i.GetProjectSessions(projectID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, projectSession := range projectSessions {
+		session, ok := i.sessions[projectSession.ID]
 		if !ok {
 			return nil, ErrSessionNotFound
 		}
@@ -171,7 +162,7 @@ func (i *InMem) StartSpec(sessionID string, machineID string, specName string) e
 		return err
 	}
 
-	specs, err := i.GetSpecs(sessionID, session.SpecIDs)
+	specs, err := i.GetSpecs(sessionID)
 	if err != nil {
 		return err
 	}
@@ -190,12 +181,7 @@ func (i *InMem) StartSpec(sessionID string, machineID string, specName string) e
 }
 
 func (i *InMem) EndSpec(sessionID string, machineID string, isPassed bool) error {
-	session, err := i.GetSession(sessionID)
-	if err != nil {
-		return err
-	}
-
-	specs, err := i.GetSpecs(sessionID, session.SpecIDs)
+	specs, err := i.GetSpecs(sessionID)
 	if err != nil {
 		return err
 	}
@@ -226,38 +212,36 @@ func (i *InMem) EndSession(sessionID string) error {
 	return nil
 }
 
-func (i *InMem) CreateSpecs(sessionID string, specs []entities.Spec) ([]string, error) {
-	ids := make([]string, len(specs))
-	for index, spec := range specs {
+func (i *InMem) CreateSpecs(sessionID string, specs []entities.Spec) error {
+	for _, spec := range specs {
 		id, _ := gonanoid.New()
 		spec.ID = id
 		spec.SessionID = sessionID
 		i.specs[spec.ID] = &spec
-		ids[index] = spec.ID
 	}
-	return ids, nil
+	return nil
 }
 
-func (i *InMem) GetSpecs(sessionID string, ids []string) ([]entities.Spec, error) {
-	specs := make([]entities.Spec, len(ids))
-	for index, id := range ids {
-		spec, ok := i.specs[id]
-		if !ok {
-			return nil, ErrSpecNotFound
+func (i *InMem) GetSpecs(sessionID string) ([]entities.Spec, error) {
+	var specs []entities.Spec
+
+	for _, spec := range i.specs {
+		if spec.SessionID == sessionID {
+			specs = append(specs, *spec)
 		}
-		specs[index] = *spec
 	}
+
 	return specs, nil
 }
 
 func (i *InMem) DeleteProject(email string, projectID string) error {
-	project, ok := i.projects[projectID]
-	if !ok {
-		return ErrProjectNotFound
+	projectSessions, err := i.GetProjectSessions(projectID)
+	if err != nil {
+		return err
 	}
 
-	for _, sessionID := range project.SessionIDs {
-		err := i.DeleteSession(email, sessionID)
+	for _, session := range projectSessions {
+		err := i.DeleteSession(email, session.ID)
 		if err != nil {
 			return err
 		}
@@ -279,19 +263,50 @@ func (i *InMem) DeleteSession(email string, sessionID string) error {
 		return ErrSessionNotFound
 	}
 
-	for _, specID := range session.SpecIDs {
-		delete(i.specs, specID)
+	for _, spec := range i.specs {
+		if spec.SessionID == sessionID {
+			delete(i.specs, spec.ID)
+		}
 	}
 
 	delete(i.sessions, session.ID)
+	return nil
+}
 
-	for _, project := range i.projects {
-		projectHasSession, index := contains(project.SessionIDs, sessionID)
-		if projectHasSession {
-			i.projects[project.ID].SessionIDs = remove(i.projects[project.ID].SessionIDs, index)
+func (i *InMem) GetProjectSessions(projectID string) ([]entities.SessionWithSpecs, error) {
+	var sessions []entities.SessionWithSpecs
+	for _, session := range i.sessions {
+		if session.ProjectID == projectID {
+			sessionWithSpecs, err := i.GetSessionWithSpecs(session.ID)
+			if err != nil {
+				return sessions, err
+			}
+			sessions = append(sessions, sessionWithSpecs)
 		}
 	}
-	return nil
+
+	return sessions, nil
+}
+
+func (i *InMem) GetSessionWithSpecs(sessionID string) (entities.SessionWithSpecs, error) {
+	var empty entities.SessionWithSpecs
+	session, err := i.GetSession(sessionID)
+	if err != nil {
+		return empty, err
+	}
+
+	specs, err := i.GetSpecs(sessionID)
+	if err != nil {
+		return empty, err
+	}
+
+	return entities.SessionWithSpecs{
+		ID:        session.ID,
+		ProjectID: session.ProjectID,
+		Start:     session.Start,
+		End:       session.End,
+		Specs:     specs,
+	}, nil
 }
 
 func contains(input []string, query string) (bool, int) {

@@ -16,10 +16,11 @@ type Storage interface {
 	CreateProject(project entities.Project) error
 	AttachProjectToUser(userID string, projectID string) error
 	DeleteProject(email string, projectID string) error
+	GetProjectSessions(projectID string) ([]entities.SessionWithSpecs, error)
 
 	GetSession(sessionID string) (entities.Session, error)
+	GetSessionWithSpecs(sessionID string) (entities.SessionWithSpecs, error)
 	CreateSession(projectName string, sessionID string, specs []entities.Spec) (*entities.Session, error)
-	AttachSessionToProject(projectName string, sessionID string) error
 	EndSession(sessionID string) error
 	DeleteSession(email string, sessionID string) error
 
@@ -27,8 +28,8 @@ type Storage interface {
 	GetProjectLatestSession(projectID string) (*entities.Session, error)
 	SetProjectLatestSession(projectName string, sessionID string) error
 
-	CreateSpecs(sessionID string, specs []entities.Spec) ([]string, error)
-	GetSpecs(sessionID string, ids []string) ([]entities.Spec, error)
+	CreateSpecs(sessionID string, specs []entities.Spec) error
+	GetSpecs(sessionID string) ([]entities.Spec, error)
 	StartSpec(sessionID string, machineID string, specName string) error
 	EndSpec(sessionID string, machineID string, isPassed bool) error
 
