@@ -4,9 +4,12 @@ import { displayTimestamp, secondsToDuration } from '../dates/displayDate';
 import Loading from '../components/Loading';
 
 import { GET_SESSION } from '../apollo/query';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
-const Session = ({ match }) => {
-    const { id } = match.params;
+const Session = () => {
+    const { state } = useLocation();
+    const { projectName } = state;
+    const { id } = useParams();
     const { data, loading } = useQuery(GET_SESSION, { variables: { id } });
 
     if (loading) {
@@ -17,6 +20,11 @@ const Session = ({ match }) => {
 
     return (
         <div className="max-w-7xl px-4 mx-auto mt-8">
+            {projectName && (
+                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">
+                    <Link to={`/project/${projectName}`}>Back to project</Link>
+                </button>
+            )}
             <div className="text-2xl">Session id "{session?.id}"</div>
             <div className="text-1xl">
                 {displayTimestamp(session?.start)} :{' '}

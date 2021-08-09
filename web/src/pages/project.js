@@ -1,13 +1,13 @@
 import { memo } from 'react';
 import { useQuery } from '@apollo/client';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import Loading from '../components/Loading';
 import { displayTimestamp, secondsToDuration } from '../dates/displayDate';
 
 import { GET_PROJECT } from '../apollo/query';
 
-const Project = ({ match }) => {
-    const { name } = match.params;
+const Project = () => {
+    const { name } = useParams();
     const { data, loading } = useQuery(GET_PROJECT, {
         variables: { name }
     });
@@ -21,22 +21,26 @@ const Project = ({ match }) => {
     return (
         <div className="max-w-7xl px-4 mx-auto mt-8">
             <div className="text-2xl">{project?.projectName}</div>
-            <div>{project?.sessions && Sessions(project.sessions)}</div>
+            <div>
+                {project?.sessions &&
+                    Sessions(project?.projectName, project.sessions)}
+            </div>
         </div>
     );
 };
 
-const Sessions = (sessions) => {
+const Sessions = (project, sessions) => {
     const orderedSessions = [...sessions].sort((a, b) => b?.end - a?.end);
     return (
         <div>
             <p>have {orderedSessions?.length} sessions:</p>
-            {orderedSessions?.length && orderedSessions.map(Session)}
+            {orderedSessions?.length &&
+                orderedSessions.map((sessions) => Session(project, sessions))}
         </div>
     );
 };
 
-const Session = (session) => {
+const Session = (project, session) => {
     const displayStart = displayTimestamp(session.start);
     const displayEnd = displayTimestamp(session.end);
 
@@ -72,7 +76,15 @@ const Session = (session) => {
 
     return (
         <li key={session?.id}>
-            <Link to={`/session/${session.id}`}>
+            <Link
+                to={{
+                    pathname: `/session/${session.id}`,
+                    state: {
+                        id: session.id,
+                        projectName: project
+                    }
+                }}
+            >
                 {session.backlog.length} specs {duration}
                 {completed && ` at ${displayStart} - ${displayEnd} `}
                 with {sessionMachines.length} machine

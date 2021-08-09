@@ -12,7 +12,9 @@
 # below:
 .git
 .gitignore
-web/node_modules
+/web/node_modules/*
+/web/src/*
+!web/build/*
 
 # Binaries for programs and plugins
 *.exe

@@ -49,7 +49,7 @@ web-build:
 .PHONY: deploy
 deploy: 
 	make lint
-	gcloud app deploy
+	gcloud app deploy --verbosity=info
 
 .PHONY: browse
 browse: 

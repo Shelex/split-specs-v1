@@ -17,7 +17,7 @@ const Projects = () => {
                 <div className="max-w-7xl px-4 mx-auto mt-8">
                     <div className="text-2xl">Available projects:</div>
                     <br />
-                    <div className="grid gap-3 grid-cols-4">
+                    <div className="grid gap-3 grid-cols-3">
                         {data.projects.map((project) => ProjectItem(project))}
                     </div>
                 </div>
@@ -56,12 +56,9 @@ const ProjectsEmpty = () => {
 
 const ProjectItem = (name) => {
     return (
-        <Link to={`/project/${name}`} className="c">
-            <div
-                key={name}
-                className="rounded-md py-3 px-6 inline-block border-2 border-blue-600 items-center"
-            >
-                <p className="align-middle ">{name}</p>
+        <Link to={`/project/${name}`} key={name}>
+            <div className="rounded-md py-3 px-6 inline-block border-2 border-blue-600 items-center">
+                <p className="align-middle break-all">{name}</p>
             </div>
         </Link>
     );
