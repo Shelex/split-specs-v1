@@ -29,6 +29,7 @@ Could be used to make concurrent machines that run your tests much equal in dura
 
 # UI
 
+- `make web-deps` - install dependencies from npm (yarn required)
 - `make web-dev` - open ui at localhost for development
 - `make web-build` - build page from sources (before deployment)
   As UI is served by golang backend from `web/build` folder, it could be accessed by spawning just backend instance, however without features like hot-reload, thus not so convenient for development

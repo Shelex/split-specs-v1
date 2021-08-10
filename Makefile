@@ -42,6 +42,10 @@ dev:
 web-dev: 
 	cd web && yarn start
 
+.PHONY: web-deps
+web-deps: 
+	cd web && yarn install
+
 .PHONY: web-build
 web-build: 
 	cd web && rm -rf build && yarn build
