@@ -27,10 +27,11 @@ const errorLink = onError(({ graphQLErrors, networkError, response }) => {
             }
             if (message.includes('access denied')) {
                 unsetToken();
+            } else {
+                return alert(
+                    `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+                );
             }
-            return alert(
-                `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
-            );
         });
     }
 });

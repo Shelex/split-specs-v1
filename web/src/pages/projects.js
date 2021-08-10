@@ -14,10 +14,9 @@ const Projects = () => {
     return (
         <div>
             {data?.projects.length ? (
-                <div className="max-w-2xl px-4 mx-auto mt-8">
-                    <div className="text-2xl">Available projects:</div>
-                    <br />
-                    <div className="grid gap-3 grid-cols-3">
+                <div className="max-w-6xl px-4 mx-auto mt-8">
+                    <div className="text-2xl">Projects:</div>
+                    <div className="grid gap-3 grid-cols-3 mt-10">
                         {data.projects.map((project) => ProjectItem(project))}
                     </div>
                 </div>
@@ -30,7 +29,7 @@ const Projects = () => {
 
 const ProjectsEmpty = () => {
     return (
-        <div className="max-w-2xl px-4 mx-auto mt-8">
+        <div className="max-w-6xl px-4 mx-auto mt-8">
             No projects available. You can integrate with:
             <li>
                 graphql api, schema and docs are available in
@@ -53,9 +52,9 @@ const ProjectsEmpty = () => {
             <li>
                 or check
                 <Link className="text-blue-600 mx-2" to="/emulate">
-                    emulate session
-                </Link>
-                :)
+                    session emulation
+                </Link>{' '}
+                to find out how it is working :)
             </li>
         </div>
     );

@@ -13,12 +13,12 @@ export const DeleteButton = ({ onClick, loading, data, title }) => {
     );
 
     return (
-        <div>
+        <div className="mt-10">
             {data ? (
                 <GoToPreviousPath />
             ) : (
                 <button
-                    className={`bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded w-full`}
+                    className={`bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded w-max`}
                     onClick={onClick}
                 >
                     {loading ? <Spinner /> : <p>{title}</p>}

@@ -42,7 +42,7 @@ const Session = () => {
     }
 
     return (
-        <div className="max-w-2xl px-4 mx-auto mt-8">
+        <div className="max-w-6xl px-4 mx-auto mt-8">
             {projectName && (
                 <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">
                     <Link to={`/project/${projectName}`}>Back to project</Link>
@@ -53,14 +53,8 @@ const Session = () => {
                 {displayTimestamp(session?.start)} :{' '}
                 {displayTimestamp(session?.end)}
             </div>
-            {Specs(session?.backlog)}
-            <br />
-            <br />
-            <div>Machines:</div>
-            <div>{ByMachine(session)}</div>
-            <br />
-            <br />
-            <br />
+            {Specs(session?.backlog, session.start > 0 && session.end > 0)}
+            <div className="mt-10">{ByMachine(session)}</div>
             <DeleteButton
                 title="Delete session"
                 onClick={onDelete}
@@ -71,28 +65,68 @@ const Session = () => {
     );
 };
 
-const Specs = (backlog) => {
+const Specs = (backlog, completed) => {
     return (
-        backlog?.length &&
-        [...backlog]
-            .sort((a, b) => b.estimatedDuration - a.estimatedDuration)
-            .map((spec) => Spec(spec))
+        <div>
+            <div>{backlog.length} files</div>
+            {backlog.length > 0 && (
+                <table className="table-auto border-collapse border border-blue-400 w-full">
+                    <thead className="space-x-1">
+                        <tr className="bg-blue-600 px-auto py-auto">
+                            <th className="w-1/2 border border-blue-400">
+                                <span className="text-gray-100 font-semibold">
+                                    FileName
+                                </span>
+                            </th>
+                            <th className="w-1/6 border border-blue-400">
+                                <span className="text-gray-100 font-semibold">
+                                    {completed
+                                        ? 'Duration'
+                                        : 'Estimated duration'}
+                                </span>
+                            </th>
+                            <th className="w-1/6 border border-blue-400">
+                                <span className="text-gray-100 font-semibold">
+                                    Machine
+                                </span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-gray-200">
+                        {backlog?.length &&
+                            [...backlog]
+                                .sort(
+                                    (a, b) =>
+                                        b.estimatedDuration -
+                                        a.estimatedDuration
+                                )
+                                .map((spec) => Spec(spec))}
+                    </tbody>
+                </table>
+            )}
+        </div>
     );
 };
 
 const Spec = (spec) => {
     return (
-        <div key={spec.file}>
-            "{spec.file}", duration:
-            {secondsToDuration(spec.estimatedDuration)}, executor:
-            {spec.assignedTo}
-        </div>
+        <tr key={spec.file} className="bg-white">
+            <td className="font-semibold border border-blue-400">
+                {spec.file}
+            </td>
+            <td className="border border-blue-400">
+                {secondsToDuration(spec.estimatedDuration)}
+            </td>
+            <td className="border border-blue-400">{spec.assignedTo}</td>
+        </tr>
     );
 };
 
 const ByMachine = (session) => {
     const sessionMachines = Array.from(
-        new Set(session?.backlog.map((item) => item?.assignedTo))
+        new Set(
+            session?.backlog.map((item) => item?.assignedTo).filter((x) => x)
+        )
     );
 
     const statsPerMachine = sessionMachines.map((machine) => {
@@ -105,13 +139,43 @@ const ByMachine = (session) => {
         };
     });
 
-    return statsPerMachine
-        .sort((a, b) => a.machine.localeCompare(b.machine))
-        .map((stat) => (
-            <div key={stat.machine}>
-                "{stat.machine}" done in {secondsToDuration(stat.duration)}
-            </div>
-        ));
+    return (
+        <div>
+            <div>{sessionMachines.length} machines</div>
+            {sessionMachines.length > 0 && (
+                <table className="table-auto border-collapse border border-blue-400 w-full">
+                    <thead className="space-x-1">
+                        <tr className="bg-blue-600 px-auto py-auto">
+                            <th className="w-1/2 border border-blue-400">
+                                <span className="text-gray-100 font-semibold">
+                                    MachineID
+                                </span>
+                            </th>
+                            <th className="w-1/6 border border-blue-400">
+                                <span className="text-gray-100 font-semibold">
+                                    Duration
+                                </span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-gray-200">
+                        {statsPerMachine
+                            .sort((a, b) => a.machine.localeCompare(b.machine))
+                            .map((stat) => (
+                                <tr key={stat.machine} className="bg-white">
+                                    <td className="font-semibold border border-blue-400">
+                                        {stat.machine}
+                                    </td>
+                                    <td className="border border-blue-400">
+                                        {secondsToDuration(stat.duration)}
+                                    </td>
+                                </tr>
+                            ))}
+                    </tbody>
+                </table>
+            )}
+        </div>
+    );
 };
 
 export default memo(Session);

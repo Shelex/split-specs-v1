@@ -37,21 +37,18 @@ const Project = () => {
     const project = data?.project;
 
     return (
-        <div className="max-w-2xl px-4 mx-auto mt-8">
+        <div className="max-w-6xl px-4 mx-auto mt-8">
             <div className="text-2xl">{project?.projectName}</div>
             <div>
                 {project?.sessions &&
                     Sessions(project?.projectName, project.sessions)}
+                <DeleteButton
+                    title="Delete project"
+                    onClick={onDelete}
+                    data={deleteData}
+                    loading={deleteLoading}
+                />
             </div>
-            <br />
-            <br />
-            <br />
-            <DeleteButton
-                title="Delete project"
-                onClick={onDelete}
-                data={deleteData}
-                loading={deleteLoading}
-            />
         </div>
     );
 };
@@ -61,11 +58,64 @@ const Sessions = (project, sessions) => {
     return (
         <div>
             <p>
-                have {orderedSessions?.length}
-                {pluralize(' session', orderedSessions?.length)}:
+                {orderedSessions?.length}
+                {pluralize(' session', orderedSessions?.length)}
             </p>
-            {orderedSessions?.length &&
-                orderedSessions.map((sessions) => Session(project, sessions))}
+
+            {orderedSessions?.length > 0 && (
+                <div>
+                    <table className="table-auto border-collapse border border-blue-400">
+                        <thead className="space-x-1">
+                            <tr className="bg-blue-600 px-auto py-auto">
+                                <th className="w-1/5 border border-blue-400">
+                                    <span className="text-gray-100 font-semibold">
+                                        ID
+                                    </span>
+                                </th>
+                                <th className="w-1/8 border border-blue-400">
+                                    <span className="text-gray-100 font-semibold">
+                                        Spec amount
+                                    </span>
+                                </th>
+                                <th className="w-1/8 border border-blue-400">
+                                    <span className="text-gray-100 font-semibold">
+                                        Duration
+                                    </span>
+                                </th>
+
+                                <th className="w-1/5 border border-blue-400">
+                                    <span className="text-gray-100 font-semibold">
+                                        Start
+                                    </span>
+                                </th>
+
+                                <th className="w-1/5 border border-blue-400">
+                                    <span className="text-gray-100 font-semibold">
+                                        End
+                                    </span>
+                                </th>
+
+                                <th className="w-1/8 border border-blue-400">
+                                    <span className="text-gray-100 font-semibold">
+                                        Machines
+                                    </span>
+                                </th>
+                                <th className="w-1/8 border border-blue-400">
+                                    <span className="text-gray-100 font-semibold">
+                                        Saved time
+                                    </span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-gray-200">
+                            {orderedSessions?.length &&
+                                orderedSessions.map((sessions) =>
+                                    Session(project, sessions)
+                                )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </div>
     );
 };
@@ -91,7 +141,7 @@ const Session = (project, session) => {
         : uncompletedDurationMessage;
 
     const sessionMachines = Array.from(
-        new Set(session.backlog.map((item) => item.assignedTo))
+        new Set(session.backlog.map((item) => item.assignedTo).filter((x) => x))
     );
 
     const expectedSerialDuration = session.backlog
@@ -103,23 +153,29 @@ const Session = (project, session) => {
     );
 
     return (
-        <li key={session?.id}>
-            <Link
-                to={{
-                    pathname: `/session/${session.id}`,
-                    state: {
-                        id: session.id,
-                        projectName: project
-                    }
-                }}
-            >
-                {session.backlog.length} specs {duration}
-                {completed && ` at ${displayStart} - ${displayEnd} `}
-                with {sessionMachines.length}
-                {pluralize('machine', sessionMachines.length)}
-                {completed ? ` saved ${savedDuration}` : ''}
-            </Link>
-        </li>
+        <tr key={session?.id} className="bg-white">
+            <td className="font-semibold border border-blue-400">
+                <Link
+                    to={{
+                        pathname: `/session/${session.id}`,
+                        state: {
+                            id: session.id,
+                            projectName: project
+                        }
+                    }}
+                >
+                    {session?.id}
+                </Link>
+            </td>
+            <td className="border border-blue-400">{session.backlog.length}</td>
+            <td className="border border-blue-400">{duration}</td>
+            <td className="border border-blue-400">{displayStart}</td>
+            <td className="border border-blue-400">{displayEnd}</td>
+            <td className="border border-blue-400">{sessionMachines.length}</td>
+            <td className="border border-blue-400">
+                {completed ? savedDuration : 0}
+            </td>
+        </tr>
     );
 };
 

@@ -61,8 +61,7 @@ const CreateSessionForm = () => {
                 <div className="mb-6">
                     <form onSubmit={onSubmit}>
                         <p>Emulate new session</p>
-                        <br />
-                        <div className="mx-auto bg-white">
+                        <div className="mx-auto bg-white mt-4">
                             <div className="mb-6">
                                 <label
                                     className="signup-label"
@@ -94,7 +93,7 @@ const CreateSessionForm = () => {
                                     name="specFiles"
                                     placeholder="Please enter spec files"
                                     autoComplete="off"
-                                    value={defaultSpecs}
+                                    defaultValue={defaultSpecs}
                                     onChange={onChange}
                                 />
                             </div>

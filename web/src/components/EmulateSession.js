@@ -80,24 +80,26 @@ export const EmulateSession = ({ session }) => {
     }
 
     return (
-        <div className="max-w-lg mx-auto p-4">
+        <div className="max-w-6xl px-4 mx-auto">
             <p>Session created</p>
             <p>project: {projectName}</p>
             <p>id: {sessionId}</p>
-            <p>
+            <p className="w-max">
                 <Link
                     to={`session/${sessionId}`}
                     location={projectName}
                     target="_blank"
                     rel="noopener noreferrer"
                 >
-                    open session
+                    <button className="bg-green-500 w-full px-2  py-3 rounded-md text-white hover:bg-green-700 focus:outline-none disabled:opacity-50">
+                        open session
+                    </button>
                 </Link>
             </p>
             <div>
                 <SpecsTable specs={data?.session?.backlog} />
             </div>
-            <div>
+            <div className="mt-5">
                 <input
                     className="signup-input"
                     type="text"
@@ -112,7 +114,7 @@ export const EmulateSession = ({ session }) => {
                     {nextSpecError && `${nextSpecError}`}
                 </div>
                 <button
-                    className={`bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded w-full`}
+                    className={`bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-2 mt-5 rounded w-full`}
                     onClick={onNextSpec(values?.machineId)}
                 >
                     {nextSpecLoading ? (
@@ -129,9 +131,9 @@ export const EmulateSession = ({ session }) => {
 const SpecsTable = ({ specs }) => {
     return specs ? (
         <div className="mt-5">
-            <table className="table-fixed">
+            <table className="table-auto border-collapse border border-blue-400">
                 <thead className="space-x-1">
-                    <tr className="bg-blue-600 px-auto py-1">
+                    <tr className="bg-blue-600 px-auto py-auto">
                         <th className="w-1/3">
                             <span className="text-gray-100 font-semibold">
                                 Name
@@ -164,21 +166,24 @@ const SpecsTable = ({ specs }) => {
                 </thead>
                 <tbody className="bg-gray-200">
                     {specs.map((spec) => (
-                        <tr
-                            key={spec.file}
-                            className="bg-white border-b-2 border-gray-200"
-                        >
-                            <td className="flex flex-row font-semibold min-w-max">
+                        <tr key={spec.file} className="bg-white">
+                            <td className="font-semibold border border-blue-400">
                                 {spec.file}
                             </td>
-                            <td className="min-w-max">
+                            <td className="border border-blue-400">
                                 {spec.estimatedDuration}
                             </td>
 
-                            <td>{spec.start}</td>
-                            <td>{spec.end}</td>
+                            <td className="border border-blue-400">
+                                {spec.start}
+                            </td>
+                            <td className="border border-blue-400">
+                                {spec.end}
+                            </td>
 
-                            <td>{spec.assignedTo || 'none'}</td>
+                            <td className="border border-blue-400">
+                                {spec.assignedTo || 'none'}
+                            </td>
                         </tr>
                     ))}
                 </tbody>
