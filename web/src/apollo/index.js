@@ -22,7 +22,9 @@ const errorLink = onError(({ graphQLErrors, networkError, response }) => {
 
     if (graphQLErrors) {
         graphQLErrors.map(({ message, locations, path }) => {
-            window.location.href = '/';
+            if (!path.includes('nextSpec')) {
+                window.location.href = '/';
+            }
             if (message.includes('access denied')) {
                 unsetToken();
             }

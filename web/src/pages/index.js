@@ -9,6 +9,7 @@ import SignUp from './signup';
 import Projects from './projects';
 import Project from './project';
 import Session from './session';
+import Emulate from './emulate';
 
 const Index = () => {
     const isLoggedIn = useReactiveVar(isLoggedInVar);
@@ -24,6 +25,7 @@ const Index = () => {
                         <Route path="/projects/" component={Projects} />
                         <Route path="/project/:name" component={Project} />
                         <Route path="/session/:id" component={Session} />
+                        <Route path="/emulate" component={Emulate} />
                     </>
                 ) : (
                     <Redirect to="/" />

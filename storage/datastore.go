@@ -518,7 +518,9 @@ func (d DataStore) DeleteProject(email string, projectID string) error {
 
 		projectKey := datastore.NameKey(projectKind, projectID, nil)
 
-		return d.Client.Delete(d.ctx, projectKey)
+		if err := d.Client.Delete(d.ctx, projectKey); err != nil {
+			return err
+		}
 	}
 
 	return d.UnlinkProjectFromUser(user.ID, projectID)

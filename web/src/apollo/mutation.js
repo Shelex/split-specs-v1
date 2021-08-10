@@ -12,8 +12,27 @@ export const SIGN_IN = gql`
     }
 `;
 
+export const DELETE_SESSION = gql`
+    mutation deleteSession($sessionId: String!) {
+        deleteSession(sessionId: $sessionId)
+    }
+`;
+
+export const DELETE_PROJECT = gql`
+    mutation deleteProject($projectName: String!) {
+        deleteProject(projectName: $projectName)
+    }
+`;
+
+export const CREATE_SESSION = gql`
+    mutation addSession($session: SessionInput!) {
+        addSession(session: $session) {
+            sessionId
+            projectName
+        }
+    }
+`;
+
 // TODO:
 //   changePassword(input: ChangePasswordInput!): String!
 //   shareProject(email: String!, projectName: String!): String!
-//   deleteSession(sessionId: String!): String!
-//   deleteProject(projectName: String!): String!

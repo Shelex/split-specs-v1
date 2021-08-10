@@ -41,3 +41,9 @@ export const GET_SESSION = gql`
         }
     }
 `;
+
+export const NEXT_SPEC = gql`
+    query nextSpec($sessionId: String!, $options: NextOptions) {
+        nextSpec(sessionId: $sessionId, options: $options)
+    }
+`;

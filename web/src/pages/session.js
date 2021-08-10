@@ -1,25 +1,48 @@
-import { memo } from 'react';
-import { useQuery } from '@apollo/client';
-import { displayTimestamp, secondsToDuration } from '../dates/displayDate';
+import { memo, useCallback } from 'react';
+import { useMutation, useQuery } from '@apollo/client';
+import { displayTimestamp, secondsToDuration } from '../format/displayDate';
 import Loading from '../components/Loading';
+import { DeleteButton } from '../components/DeleteButton';
+import { Redirect } from 'react-router';
 
 import { GET_SESSION } from '../apollo/query';
+import { DELETE_SESSION } from '../apollo/mutation';
 import { Link, useLocation, useParams } from 'react-router-dom';
 
 const Session = () => {
-    const { state } = useLocation();
-    const { projectName } = state;
+    const location = useLocation();
+    const projectName = location?.state?.projectName;
     const { id } = useParams();
-    const { data, loading } = useQuery(GET_SESSION, { variables: { id } });
+
+    const [deleteSession, { data: deleteData, loading: deleteLoading }] =
+        useMutation(DELETE_SESSION);
+
+    const { data, loading } = useQuery(GET_SESSION, {
+        variables: { id }
+    });
+
+    const onDelete = useCallback(
+        (e) => {
+            e.preventDefault();
+            deleteSession({
+                variables: { sessionId: id }
+            }).then(() => {
+                window.location.href = projectName
+                    ? `/project/${projectName}`
+                    : '/projects';
+            });
+        },
+        [deleteSession]
+    );
+
+    const session = data?.session;
 
     if (loading) {
         return <Loading />;
     }
 
-    const session = data?.session;
-
     return (
-        <div className="max-w-7xl px-4 mx-auto mt-8">
+        <div className="max-w-2xl px-4 mx-auto mt-8">
             {projectName && (
                 <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded">
                     <Link to={`/project/${projectName}`}>Back to project</Link>
@@ -35,6 +58,15 @@ const Session = () => {
             <br />
             <div>Machines:</div>
             <div>{ByMachine(session)}</div>
+            <br />
+            <br />
+            <br />
+            <DeleteButton
+                title="Delete session"
+                onClick={onDelete}
+                data={deleteData}
+                loading={deleteLoading}
+            />
         </div>
     );
 };
