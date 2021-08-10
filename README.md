@@ -23,7 +23,15 @@ Could be used to make concurrent machines that run your tests much equal in dura
 - `make keys` - generate private and public keys for auth
 - `export ENV=dev` - to use in memory storage instead of real db
 - `make api` - build binary and execute
-- open `http://localhost:8080/` for GraphQL playground or use Altair/Postman/Insomnia
+- open `http://localhost:8080/playground` for GraphQL playground
+- use `http://localhost:8080/query` for Altair/Postman/Insomnia api clients
+- use `http://localhost:8080/` for ui interface
+
+# UI
+
+- `make web-dev` - open ui at localhost for development
+- `make web-build` - build page from sources (before deployment)
+  As UI is served by golang backend from `web/build` folder, it could be accessed by spawning just backend instance, however without features like hot-reload, thus not so convenient for development
 
 # Use with gcloud sdk
 
