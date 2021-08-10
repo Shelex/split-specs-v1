@@ -86,7 +86,7 @@ export const EmulateSession = ({ session }) => {
             <p>id: {sessionId}</p>
             <p className="w-max">
                 <Link
-                    to={`session/${sessionId}`}
+                    to={`/session/${projectName}/${sessionId}`}
                     location={projectName}
                     target="_blank"
                     rel="noopener noreferrer"

@@ -3,16 +3,13 @@ import { useMutation, useQuery } from '@apollo/client';
 import { displayTimestamp, secondsToDuration } from '../format/displayDate';
 import Loading from '../components/Loading';
 import { DeleteButton } from '../components/DeleteButton';
-import { Redirect } from 'react-router';
 
 import { GET_SESSION } from '../apollo/query';
 import { DELETE_SESSION } from '../apollo/mutation';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useHistory, useParams } from 'react-router-dom';
 
 const Session = () => {
-    const location = useLocation();
-    const projectName = location?.state?.projectName;
-    const { id } = useParams();
+    const { projectName, id } = useParams();
 
     const [deleteSession, { data: deleteData, loading: deleteLoading }] =
         useMutation(DELETE_SESSION);
@@ -21,15 +18,15 @@ const Session = () => {
         variables: { id }
     });
 
+    const history = useHistory();
+
     const onDelete = useCallback(
         (e) => {
             e.preventDefault();
             deleteSession({
                 variables: { sessionId: id }
             }).then(() => {
-                window.location.href = projectName
-                    ? `/project/${projectName}`
-                    : '/projects';
+                history.push(`/project/${projectName}`);
             });
         },
         [deleteSession]
@@ -53,7 +50,11 @@ const Session = () => {
                 {displayTimestamp(session?.start)} :{' '}
                 {displayTimestamp(session?.end)}
             </div>
-            {Specs(session?.backlog, session.start > 0 && session.end > 0)}
+            {Specs(
+                session?.backlog,
+                session.start > 0 && session.end > 0,
+                projectName
+            )}
             <div className="mt-10">{ByMachine(session)}</div>
             <DeleteButton
                 title="Delete session"
@@ -65,7 +66,7 @@ const Session = () => {
     );
 };
 
-const Specs = (backlog, completed) => {
+const Specs = (backlog, completed, projectName) => {
     return (
         <div>
             <div>{backlog.length} files</div>
@@ -100,7 +101,7 @@ const Specs = (backlog, completed) => {
                                         b.estimatedDuration -
                                         a.estimatedDuration
                                 )
-                                .map((spec) => Spec(spec))}
+                                .map((spec) => Spec(spec, projectName))}
                     </tbody>
                 </table>
             )}
@@ -108,11 +109,15 @@ const Specs = (backlog, completed) => {
     );
 };
 
-const Spec = (spec) => {
+const Spec = (spec, projectName) => {
     return (
         <tr key={spec.file} className="bg-white">
             <td className="font-semibold border border-blue-400">
-                {spec.file}
+                <Link
+                    to={`/spec/${projectName}/${encodeURIComponent(spec.file)}`}
+                >
+                    {spec.file}
+                </Link>
             </td>
             <td className="border border-blue-400">
                 {secondsToDuration(spec.estimatedDuration)}

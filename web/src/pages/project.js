@@ -157,7 +157,7 @@ const Session = (project, session) => {
             <td className="font-semibold border border-blue-400">
                 <Link
                     to={{
-                        pathname: `/session/${session.id}`,
+                        pathname: `/session/${project}/${session.id}`,
                         state: {
                             id: session.id,
                             projectName: project

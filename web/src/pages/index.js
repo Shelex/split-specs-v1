@@ -9,6 +9,7 @@ import SignUp from './signup';
 import Projects from './projects';
 import Project from './project';
 import Session from './session';
+import Spec from './spec';
 import Emulate from './emulate';
 
 const Index = () => {
@@ -24,7 +25,11 @@ const Index = () => {
                     <>
                         <Route path="/projects/" component={Projects} />
                         <Route path="/project/:name" component={Project} />
-                        <Route path="/session/:id" component={Session} />
+                        <Route path="/spec/:name/:file" component={Spec} />
+                        <Route
+                            path="/session/:projectName/:id"
+                            component={Session}
+                        />
                         <Route path="/emulate" component={Emulate} />
                     </>
                 ) : (

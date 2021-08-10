@@ -5,7 +5,9 @@ import { GET_PROJECTS } from '../apollo/query';
 import Loading from '../components/Loading';
 
 const Projects = () => {
-    const { data, loading } = useQuery(GET_PROJECTS);
+    const { data, loading } = useQuery(GET_PROJECTS, {
+        fetchPolicy: 'network-only'
+    });
 
     if (loading) {
         return <Loading />;
