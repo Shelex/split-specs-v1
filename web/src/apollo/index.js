@@ -15,7 +15,7 @@ const httpLink = createHttpLink({
     uri: 'https://split-specs.appspot.com/query'
 });
 
-const errorLink = onError(({ graphQLErrors, networkError, response }) => {
+const errorLink = onError(({ graphQLErrors, networkError }) => {
     if (networkError) {
         console.error(`[Network error]: ${networkError}`);
     }

@@ -86,10 +86,6 @@ func (svc *SplitService) InviteUserToProject(user entities.User, guest string, p
 	return svc.Repository.AttachProjectToUser(guestUser.ID, projectID)
 }
 
-type specHistoryMatch struct {
-	average float64
-}
-
 func (svc *SplitService) EstimateDuration(projectID string, specs []entities.Spec) []entities.Spec {
 	latestSessions, err := svc.Repository.GetProjectLatestSessions(projectID, 5)
 	if err != nil {
@@ -106,7 +102,7 @@ func (svc *SplitService) EstimateDuration(projectID string, specs []entities.Spe
 		historicalSpecs = append(historicalSpecs, sessionSpecs...)
 	}
 
-	matches := make(map[string]specHistoryMatch)
+	averages := make(map[string]float64)
 
 	for _, historicalSpec := range historicalSpecs {
 		if historicalSpec.End == 0 {
@@ -120,20 +116,19 @@ func (svc *SplitService) EstimateDuration(projectID string, specs []entities.Spe
 			historicalSpec.EstimatedDuration = 1
 		}
 
-		match, ok := matches[historicalSpec.FilePath]
+		_, ok := averages[historicalSpec.FilePath]
 		if !ok {
-			matches[historicalSpec.FilePath] = specHistoryMatch{
-				average: float64(historicalSpec.EstimatedDuration),
-			}
+			averages[historicalSpec.FilePath] = float64(historicalSpec.EstimatedDuration)
 		}
-		match.average = (match.average + float64(historicalSpec.EstimatedDuration)) / 2
-		matches[historicalSpec.FilePath] = match
+
+		average := (averages[historicalSpec.FilePath] + float64(historicalSpec.EstimatedDuration)) / 2
+		averages[historicalSpec.FilePath] = average
 	}
 
 	for index, spec := range specs {
-		match, ok := matches[spec.FilePath]
+		average, ok := averages[spec.FilePath]
 		if ok {
-			specs[index].EstimatedDuration = int64(math.Round(match.average))
+			specs[index].EstimatedDuration = int64(math.Round(average))
 		}
 	}
 
