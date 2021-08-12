@@ -1,4 +1,5 @@
 module.exports = {
+    root: true,
     extends: ['prettier'],
     parserOptions: {
         sourceType: 'module',
@@ -77,5 +78,5 @@ module.exports = {
         'no-unneeded-ternary': 'warn',
         'no-useless-computed-key': 'error'
     },
-    plugins: ['prettier']
+    plugins: ['prettier', 'import']
 };

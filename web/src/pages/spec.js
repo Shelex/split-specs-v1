@@ -1,10 +1,9 @@
 import { memo } from 'react';
 import { useQuery } from '@apollo/client';
+import { Link, useParams } from 'react-router-dom';
 import { secondsToDuration } from '../format/displayDate';
 import Loading from '../components/Loading';
-
 import { GET_PROJECT } from '../apollo/query';
-import { Link, useParams } from 'react-router-dom';
 
 const Spec = () => {
     const { name, file } = useParams();

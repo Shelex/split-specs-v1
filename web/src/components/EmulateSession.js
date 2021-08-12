@@ -1,20 +1,16 @@
-import { useLazyQuery, useMutation, useQuery, makeVar } from '@apollo/client';
+import { useLazyQuery, useQuery } from '@apollo/client';
 import { memo, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { timestampToDate, secondsToDuration } from '../format/displayDate';
 
 import { GET_SESSION, NEXT_SPEC } from '../apollo/query';
 
-import Loading from './Loading';
 import Spinner from './Spinner';
 
 export const EmulateSession = ({ session }) => {
     const { sessionId, projectName } = session;
 
-    const {
-        data,
-        loading,
-        refetch: refetchSession
-    } = useQuery(GET_SESSION, {
+    const { data, refetch: refetchSession } = useQuery(GET_SESSION, {
         variables: {
             id: sessionId
         },
@@ -31,18 +27,12 @@ export const EmulateSession = ({ session }) => {
         }));
     }, []);
 
-    const [
-        getNextSpec,
-        {
-            loading: nextSpecLoading,
-            refetch: refetchNextSpec,
-            error: nextSpecError
-        }
-    ] = useLazyQuery(NEXT_SPEC, {
-        fetchPolicy: 'no-cache',
-        nextFetchPolicy: 'no-cache',
-        errorPolicy: 'ignore'
-    });
+    const [getNextSpec, { loading: nextSpecLoading, error: nextSpecError }] =
+        useLazyQuery(NEXT_SPEC, {
+            fetchPolicy: 'no-cache',
+            nextFetchPolicy: 'no-cache',
+            errorPolicy: 'ignore'
+        });
 
     const onNextSpec = (machineId) => async (e) => {
         e.preventDefault();
@@ -54,9 +44,7 @@ export const EmulateSession = ({ session }) => {
                 }
             }
         };
-        values?.nextSpec
-            ? await refetchNextSpec({ ...options })
-            : await Promise.resolve(getNextSpec(options));
+        getNextSpec(options);
 
         setValues((prev) => ({
             ...prev,
@@ -71,13 +59,9 @@ export const EmulateSession = ({ session }) => {
                     }
                 });
                 resolve();
-            }, 1000)
+            }, 500)
         );
     };
-
-    if (loading) {
-        return <Loading />;
-    }
 
     return (
         <div className="max-w-6xl px-4 mx-auto">
@@ -97,11 +81,15 @@ export const EmulateSession = ({ session }) => {
                 </Link>
             </p>
             <div>
-                <SpecsTable specs={data?.session?.backlog} />
+                <SpecsTable
+                    specs={data?.session?.backlog}
+                    finished={data?.session?.end > 0}
+                    started={data?.session?.start > 0}
+                />
             </div>
             <div className="mt-5">
                 <input
-                    className="signup-input"
+                    className="form-input"
                     type="text"
                     name="machineId"
                     defaultValue={values?.machineId || 'default'}
@@ -128,7 +116,17 @@ export const EmulateSession = ({ session }) => {
     );
 };
 
-const SpecsTable = ({ specs }) => {
+const SpecsTable = ({ specs, started, finished }) => {
+    const executionTime = 'Execution time';
+    const estimatedDuration = 'Estimated Duration';
+
+    const durationHeader =
+        started && finished
+            ? executionTime
+            : started
+            ? `${estimatedDuration} / ${executionTime}`
+            : estimatedDuration;
+
     return specs ? (
         <div className="mt-5">
             <table className="table-auto border-collapse border border-blue-400">
@@ -141,7 +139,7 @@ const SpecsTable = ({ specs }) => {
                         </th>
                         <th className="w-1/5">
                             <span className="text-gray-100 font-semibold">
-                                Estimated
+                                {durationHeader}
                             </span>
                         </th>
 
@@ -171,14 +169,16 @@ const SpecsTable = ({ specs }) => {
                                 {spec.file}
                             </td>
                             <td className="border border-blue-400">
-                                {spec.estimatedDuration}
+                                {secondsToDuration(spec.estimatedDuration)}
                             </td>
 
                             <td className="border border-blue-400">
-                                {spec.start}
+                                {spec.start > 0
+                                    ? timestampToDate(spec.start)
+                                    : ''}
                             </td>
                             <td className="border border-blue-400">
-                                {spec.end}
+                                {spec.end > 0 ? timestampToDate(spec.end) : ''}
                             </td>
 
                             <td className="border border-blue-400">

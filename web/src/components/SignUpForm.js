@@ -49,11 +49,11 @@ const SignUpForm = ({ history }) => {
         <form onSubmit={onSubmit}>
             <div className="max-w-lg mx-auto bg-white p-4">
                 <div className="mb-4">
-                    <label className="signup-label" htmlFor="email">
+                    <label className="form-label" htmlFor="email">
                         Email
                     </label>
                     <input
-                        className="signup-input"
+                        className="form-input"
                         type="email"
                         name="email"
                         id="email"
@@ -65,11 +65,11 @@ const SignUpForm = ({ history }) => {
                 </div>
 
                 <div className="mb-4">
-                    <label className="signup-label" htmlFor="password">
+                    <label className="form-label" htmlFor="password">
                         Password
                     </label>
                     <input
-                        className="signup-input"
+                        className="form-input"
                         type="password"
                         name="password"
                         id="password"
@@ -81,14 +81,14 @@ const SignUpForm = ({ history }) => {
                 </div>
 
                 <div className="mb-4">
-                    <label className="signup-label" htmlFor="password-check">
+                    <label className="form-label" htmlFor="password-check">
                         Confirm Password
                     </label>
                     <input
                         type="password"
                         name="passwordConfirm"
                         id="password-check"
-                        className="signup-input"
+                        className="form-input"
                         placeholder="Please enter your password again"
                         autoComplete="off"
                         required

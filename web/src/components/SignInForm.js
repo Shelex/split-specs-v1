@@ -59,7 +59,7 @@ const SignInForm = () => {
                         <div className="max-w-lg mx-auto mb-2">
                             <div>
                                 <input
-                                    className="signup-input"
+                                    className="form-input"
                                     type="email"
                                     name="email"
                                     placeholder="Please enter your email"
@@ -71,7 +71,7 @@ const SignInForm = () => {
 
                             <div>
                                 <input
-                                    className="signup-input"
+                                    className="form-input"
                                     type="password"
                                     name="password"
                                     placeholder="Please enter your password"

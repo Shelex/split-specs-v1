@@ -14,9 +14,9 @@ const Projects = () => {
     }
 
     return (
-        <div>
+        <div className="max-w-6xl px-4 mx-auto mt-8">
             {data?.projects.length ? (
-                <div className="max-w-6xl px-4 mx-auto mt-8">
+                <div>
                     <div className="text-2xl">Projects:</div>
                     <div className="grid gap-3 grid-cols-3 mt-10">
                         {data.projects.map((project) => ProjectItem(project))}

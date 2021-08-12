@@ -64,13 +64,13 @@ const CreateSessionForm = () => {
                         <div className="mx-auto bg-white mt-4">
                             <div className="mb-6">
                                 <label
-                                    className="signup-label"
+                                    className="form-label"
                                     htmlFor="projectName"
                                 >
                                     Please enter project name
                                 </label>
                                 <input
-                                    className="signup-input"
+                                    className="form-input"
                                     type="text"
                                     name="projectName"
                                     placeholder="Please enter name of project"
@@ -82,13 +82,13 @@ const CreateSessionForm = () => {
 
                             <div className="mb-6">
                                 <label
-                                    className="signup-label"
+                                    className="form-label"
                                     htmlFor="specFiles"
                                 >
                                     Please enter comma-separated spec files
                                 </label>
                                 <input
-                                    className="signup-input"
+                                    className="form-input"
                                     type="text"
                                     name="specFiles"
                                     placeholder="Please enter spec files"

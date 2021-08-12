@@ -12,7 +12,8 @@ import { DELETE_PROJECT } from '../apollo/mutation';
 const Project = () => {
     const { name } = useParams();
     const { data, loading } = useQuery(GET_PROJECT, {
-        variables: { name }
+        variables: { name },
+        fetchPolicy: 'network-only'
     });
 
     const [deleteProject, { data: deleteData, loading: deleteLoading }] =

@@ -15,7 +15,8 @@ const Session = () => {
         useMutation(DELETE_SESSION);
 
     const { data, loading } = useQuery(GET_SESSION, {
-        variables: { id }
+        variables: { id },
+        fetchPolicy: 'network-only'
     });
 
     const history = useHistory();

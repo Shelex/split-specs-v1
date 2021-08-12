@@ -1,8 +1,8 @@
 import { memo } from 'react';
 import { BrowserRouter as Router, Redirect, Route } from 'react-router-dom';
 import { useReactiveVar } from '@apollo/client';
-
 import { isLoggedInVar } from '../apollo';
+
 import Layout from '../components/Layout';
 import Home from './home';
 import SignUp from './signup';
