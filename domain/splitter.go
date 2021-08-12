@@ -88,7 +88,6 @@ func (svc *SplitService) InviteUserToProject(user entities.User, guest string, p
 
 type specHistoryMatch struct {
 	average float64
-	count   int
 }
 
 func (svc *SplitService) EstimateDuration(projectID string, specs []entities.Spec) []entities.Spec {
@@ -113,15 +112,21 @@ func (svc *SplitService) EstimateDuration(projectID string, specs []entities.Spe
 		if historicalSpec.End == 0 {
 			continue
 		}
+
+		// handle case when estimated duration is 0, because of milliseconds rounding
+		// set it to 1 in order to separate from new specs
+		// TODO: migrate to float64, timestamps should include milliseconds
+		if historicalSpec.EstimatedDuration == 0 {
+			historicalSpec.EstimatedDuration = 1
+		}
+
 		match, ok := matches[historicalSpec.FilePath]
 		if !ok {
 			matches[historicalSpec.FilePath] = specHistoryMatch{
-				average: 0,
-				count:   0,
+				average: float64(historicalSpec.EstimatedDuration),
 			}
 		}
-		match.count = match.count + 1
-		match.average = (match.average + float64(historicalSpec.EstimatedDuration)) / float64(match.count)
+		match.average = (match.average + float64(historicalSpec.EstimatedDuration)) / 2
 		matches[historicalSpec.FilePath] = match
 	}
 
