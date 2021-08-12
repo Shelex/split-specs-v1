@@ -19,6 +19,8 @@ export const GET_PROJECT = gql`
                     file
                     estimatedDuration
                     assignedTo
+                    start
+                    end
                 }
             }
         }

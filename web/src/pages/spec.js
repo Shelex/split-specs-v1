@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { useQuery } from '@apollo/client';
 import { Link, useParams } from 'react-router-dom';
-import { secondsToDuration } from '../format/displayDate';
+import { secondsToDuration, displayTimestamp } from '../format/displayDate';
 import Loading from '../components/Loading';
 import { GET_PROJECT } from '../apollo/query';
 
@@ -46,9 +46,19 @@ const Spec = () => {
                 <table className="table-auto border-collapse border border-blue-400 w-full">
                     <thead className="space-x-1">
                         <tr className="bg-blue-600 px-auto py-auto">
-                            <th className="w-1/2 border border-blue-400">
+                            <th className="w-1/3 border border-blue-400">
                                 <span className="text-gray-100 font-semibold">
                                     SessionID
+                                </span>
+                            </th>
+                            <th className="w-1/5 border border-blue-400">
+                                <span className="text-gray-100 font-semibold">
+                                    Start
+                                </span>
+                            </th>
+                            <th className="w-1/5 border border-blue-400">
+                                <span className="text-gray-100 font-semibold">
+                                    End
                                 </span>
                             </th>
                             <th className="w-1/6 border border-blue-400">
@@ -58,7 +68,7 @@ const Spec = () => {
                             </th>
                             <th className="w-1/6 border border-blue-400">
                                 <span className="text-gray-100 font-semibold">
-                                    Duration/Session, %
+                                    Duration/Machine, %
                                 </span>
                             </th>
                         </tr>
@@ -72,6 +82,12 @@ const Spec = () => {
                                     >
                                         {stat.sessionId}
                                     </Link>
+                                </td>
+                                <td className="border border-blue-400">
+                                    {displayTimestamp(stat.start)}
+                                </td>
+                                <td className="border border-blue-400">
+                                    {displayTimestamp(stat.end)}
                                 </td>
                                 <td className="border border-blue-400">
                                     {secondsToDuration(stat.estimatedDuration)}
