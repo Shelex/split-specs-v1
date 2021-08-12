@@ -1,4 +1,4 @@
 
-web/src -linguist-detectable
+web/src/** -linguist-detectable
 api/graph/generated/generated.go linguist-generated
 api/graph/model/models_gen.go
