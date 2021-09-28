@@ -5,11 +5,8 @@ import Spinner from './Spinner';
 
 export const DeleteButton = ({ onClick, loading, data, title }) => {
     let history = useHistory();
-    const GoToPreviousPath = () => (
-        <div>
-            {title.includes('session') ? history.goBack() : history.push('/')}
-        </div>
-    );
+    const GoToPreviousPath = () =>
+        title.includes('session') ? history.goBack() : history.push('/');
 
     const onConfirm = useCallback((e) => {
         e.preventDefault();
@@ -21,7 +18,7 @@ export const DeleteButton = ({ onClick, loading, data, title }) => {
     return (
         <div className="mt-10">
             {data ? (
-                <GoToPreviousPath />
+                GoToPreviousPath()
             ) : (
                 <button
                     className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded w-48`}

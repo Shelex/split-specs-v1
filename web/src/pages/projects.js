@@ -3,9 +3,10 @@ import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { GET_PROJECTS } from '../apollo/query';
 import Loading from '../components/Loading';
+import Alert from '../components/Alert';
 
 const Projects = () => {
-    const { data, loading } = useQuery(GET_PROJECTS, {
+    const { data, loading, error } = useQuery(GET_PROJECTS, {
         fetchPolicy: 'network-only'
     });
 
@@ -15,7 +16,9 @@ const Projects = () => {
 
     return (
         <div className="max-w-6xl px-4 mx-auto mt-8">
-            {data?.projects.length ? (
+            {error ? (
+                Alert(error)
+            ) : data?.projects.length ? (
                 <div>
                     <div className="text-2xl">Projects:</div>
                     <div className="grid gap-3 grid-cols-3 mt-10">

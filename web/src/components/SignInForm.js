@@ -83,7 +83,7 @@ const SignInForm = () => {
                         </div>
 
                         <div className="text-xs font-semibold text-red-500">
-                            {error && `${error.message}`}
+                            {error && error.message}
                         </div>
 
                         <div className="mt-8">

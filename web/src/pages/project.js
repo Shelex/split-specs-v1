@@ -2,6 +2,7 @@ import { memo, useCallback } from 'react';
 import { useQuery, useMutation } from '@apollo/client';
 import { Link, useParams } from 'react-router-dom';
 import Loading from '../components/Loading';
+import Alert from '../components/Alert';
 import { displayTimestamp, secondsToDuration } from '../format/displayDate';
 import { pluralize } from '../format/text';
 
@@ -11,7 +12,7 @@ import { DELETE_PROJECT } from '../apollo/mutation';
 
 const Project = () => {
     const { name } = useParams();
-    const { data, loading } = useQuery(GET_PROJECT, {
+    const { data, loading, error } = useQuery(GET_PROJECT, {
         variables: { name },
         fetchPolicy: 'network-only'
     });
@@ -37,7 +38,9 @@ const Project = () => {
 
     const project = data?.project;
 
-    return (
+    return error ? (
+        Alert(error)
+    ) : (
         <div className="max-w-6xl px-4 mx-auto mt-8">
             <div className="text-2xl">{project?.projectName}</div>
             <div>

@@ -15,22 +15,20 @@ const httpLink = createHttpLink({
     uri: 'https://split-specs.appspot.com/query'
 });
 
-const errorLink = onError(({ graphQLErrors, networkError }) => {
+const errorLink = onError(({ graphQLErrors, networkError, response }) => {
     if (networkError) {
+        if (networkError.statusCode === 401) {
+            unsetToken();
+        }
         console.error(`[Network error]: ${networkError}`);
     }
 
     if (graphQLErrors) {
-        graphQLErrors.map(({ message, locations, path }) => {
+        graphQLErrors.map(({ message, path }) => {
             if (!path.includes('nextSpec')) {
-                window.location.href = '/';
             }
             if (message.includes('access denied')) {
                 unsetToken();
-            } else {
-                return alert(
-                    `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
-                );
             }
         });
     }

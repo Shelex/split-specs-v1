@@ -3,6 +3,7 @@ import { useQuery } from '@apollo/client';
 import { Link, useParams } from 'react-router-dom';
 import { secondsToDuration, displayTimestamp } from '../format/displayDate';
 import Loading from '../components/Loading';
+import Alert from '../components/Alert';
 import { GET_PROJECT } from '../apollo/query';
 
 const Spec = () => {
@@ -10,11 +11,19 @@ const Spec = () => {
 
     const specFile = decodeURIComponent(file);
 
-    const { data: projectData, loading } = useQuery(GET_PROJECT, {
+    const {
+        data: projectData,
+        loading,
+        error
+    } = useQuery(GET_PROJECT, {
         variables: {
             name
         }
     });
+
+    if (error) {
+        return Alert(error);
+    }
 
     if (loading) {
         return <Loading />;
@@ -68,7 +77,7 @@ const Spec = () => {
                             </th>
                             <th className="w-1/6 border border-blue-400">
                                 <span className="text-gray-100 font-semibold">
-                                    Duration/Machine, %
+                                    Duration/Session, %
                                 </span>
                             </th>
                         </tr>

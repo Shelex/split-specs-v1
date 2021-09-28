@@ -30,8 +30,7 @@ export const EmulateSession = ({ session }) => {
     const [getNextSpec, { loading: nextSpecLoading, error: nextSpecError }] =
         useLazyQuery(NEXT_SPEC, {
             fetchPolicy: 'no-cache',
-            nextFetchPolicy: 'no-cache',
-            errorPolicy: 'ignore'
+            nextFetchPolicy: 'no-cache'
         });
 
     const onNextSpec = (machineId) => async (e) => {

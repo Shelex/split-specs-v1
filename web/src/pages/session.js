@@ -2,11 +2,12 @@ import { memo, useCallback } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { displayTimestamp, secondsToDuration } from '../format/displayDate';
 import Loading from '../components/Loading';
+import Alert from '../components/Alert';
 import { DeleteButton } from '../components/DeleteButton';
 
 import { GET_SESSION } from '../apollo/query';
 import { DELETE_SESSION } from '../apollo/mutation';
-import { Link, useHistory, useParams } from 'react-router-dom';
+import { Link, useParams, Redirect } from 'react-router-dom';
 
 const Session = () => {
     const { projectName, id } = useParams();
@@ -14,12 +15,10 @@ const Session = () => {
     const [deleteSession, { data: deleteData, loading: deleteLoading }] =
         useMutation(DELETE_SESSION);
 
-    const { data, loading } = useQuery(GET_SESSION, {
+    const { data, loading, error } = useQuery(GET_SESSION, {
         variables: { id },
         fetchPolicy: 'network-only'
     });
-
-    const history = useHistory();
 
     const onDelete = useCallback(
         (e) => {
@@ -27,7 +26,8 @@ const Session = () => {
             deleteSession({
                 variables: { sessionId: id }
             }).then(() => {
-                history.push(`/project/${projectName}`);
+                const targetPage = `/project/${projectName}`;
+                return <Redirect to={targetPage} />;
             });
         },
         [deleteSession]
@@ -37,6 +37,10 @@ const Session = () => {
 
     if (loading) {
         return <Loading />;
+    }
+
+    if (error) {
+        return Alert(error);
     }
 
     return (
