@@ -56,3 +56,19 @@ func specToApiSpec(spec entities.Spec) *model.Spec {
 		AssignedTo:        spec.AssignedTo,
 	}
 }
+
+func ApiKeysToApi(apiKeys []entities.ApiKey) []*model.APIKey {
+	keys := make([]*model.APIKey, len(apiKeys))
+	for i, key := range apiKeys {
+		keys[i] = apiKeyToApi(key)
+	}
+	return keys
+}
+
+func apiKeyToApi(apiKey entities.ApiKey) *model.APIKey {
+	return &model.APIKey{
+		ID:       apiKey.ID,
+		Name:     apiKey.Name,
+		ExpireAt: int(apiKey.ExpireAt),
+	}
+}

@@ -10,6 +10,7 @@ import (
 	"github.com/Shelex/split-specs/api/factory"
 	"github.com/Shelex/split-specs/api/graph/generated"
 	"github.com/Shelex/split-specs/api/graph/model"
+	"github.com/Shelex/split-specs/entities"
 	"github.com/Shelex/split-specs/internal/auth"
 	"github.com/Shelex/split-specs/internal/users"
 	"github.com/Shelex/split-specs/pkg/jwt"
@@ -147,6 +148,47 @@ func (r *mutationResolver) DeleteProject(ctx context.Context, projectName string
 	return "project deleted", nil
 }
 
+func (r *mutationResolver) AddAPIKey(ctx context.Context, name string, expireAt int) (string, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return "", &users.AccessDeniedError{}
+	}
+
+	id, _ := gonanoid.New()
+
+	apiKey := entities.ApiKey{
+		ID:       id,
+		UserID:   user.ID,
+		Name:     name,
+		ExpireAt: int64(expireAt),
+	}
+
+	if err := r.SplitService.Repository.CreateApiKey(user.ID, apiKey); err != nil {
+		return "", err
+	}
+
+	token, err := jwt.GenerateApiKey(*user, apiKey)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+func (r *mutationResolver) DeleteAPIKey(ctx context.Context, keyID string) (string, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return "", &users.AccessDeniedError{}
+	}
+
+	err := r.SplitService.Repository.DeleteApiKey(user.ID, keyID)
+	if err != nil {
+		return "", err
+	}
+
+	return "apiKey deleted", nil
+}
+
 func (r *queryResolver) NextSpec(ctx context.Context, sessionID string, options *model.NextOptions) (string, error) {
 	if user := auth.ForContext(ctx); user == nil {
 		return "", &users.AccessDeniedError{}
@@ -215,6 +257,20 @@ func (r *queryResolver) Session(ctx context.Context, sessionID string) (*model.S
 	}
 
 	return factory.ProjectSessionToApiSession(session), nil
+}
+
+func (r *queryResolver) GetAPIKeys(ctx context.Context) ([]*model.APIKey, error) {
+	user := auth.ForContext(ctx)
+	if user == nil {
+		return nil, &users.AccessDeniedError{}
+	}
+
+	keys, err := r.SplitService.Repository.GetApiKeys(user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return factory.ApiKeysToApi(keys), nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

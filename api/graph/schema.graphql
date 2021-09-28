@@ -50,11 +50,18 @@ type Spec {
   assignedTo: String!
 }
 
+type ApiKey {
+  id: String!
+  name: String!
+  expireAt: Int!
+}
+
 type Query {
   nextSpec(sessionId: String!, options: NextOptions): String!
   project(name: String!): Project!
   projects: [String!]!
   session(sessionId: String!): Session!
+  getApiKeys: [ApiKey!]!
 }
 
 type Mutation {
@@ -65,6 +72,8 @@ type Mutation {
   shareProject(email: String!, projectName: String!): String!
   deleteSession(sessionId: String!): String!
   deleteProject(projectName: String!): String!
+  addApiKey(name: String!, expireAt: Int!): String!
+  deleteApiKey(keyId: String!): String!
 }
 
 schema {

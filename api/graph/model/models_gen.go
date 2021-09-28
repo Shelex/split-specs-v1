@@ -2,6 +2,12 @@
 
 package model
 
+type APIKey struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	ExpireAt int    `json:"expireAt"`
+}
+
 type ChangePasswordInput struct {
 	Password    string `json:"password"`
 	NewPassword string `json:"newPassword"`

@@ -43,9 +43,17 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	APIKey struct {
+		ExpireAt func(childComplexity int) int
+		ID       func(childComplexity int) int
+		Name     func(childComplexity int) int
+	}
+
 	Mutation struct {
+		AddAPIKey      func(childComplexity int, name string, expireAt int) int
 		AddSession     func(childComplexity int, session model.SessionInput) int
 		ChangePassword func(childComplexity int, input model.ChangePasswordInput) int
+		DeleteAPIKey   func(childComplexity int, keyID string) int
 		DeleteProject  func(childComplexity int, projectName string) int
 		DeleteSession  func(childComplexity int, sessionID string) int
 		Login          func(childComplexity int, input model.User) int
@@ -60,10 +68,11 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		NextSpec func(childComplexity int, sessionID string, options *model.NextOptions) int
-		Project  func(childComplexity int, name string) int
-		Projects func(childComplexity int) int
-		Session  func(childComplexity int, sessionID string) int
+		GetAPIKeys func(childComplexity int) int
+		NextSpec   func(childComplexity int, sessionID string, options *model.NextOptions) int
+		Project    func(childComplexity int, name string) int
+		Projects   func(childComplexity int) int
+		Session    func(childComplexity int, sessionID string) int
 	}
 
 	Session struct {
@@ -96,12 +105,15 @@ type MutationResolver interface {
 	ShareProject(ctx context.Context, email string, projectName string) (string, error)
 	DeleteSession(ctx context.Context, sessionID string) (string, error)
 	DeleteProject(ctx context.Context, projectName string) (string, error)
+	AddAPIKey(ctx context.Context, name string, expireAt int) (string, error)
+	DeleteAPIKey(ctx context.Context, keyID string) (string, error)
 }
 type QueryResolver interface {
 	NextSpec(ctx context.Context, sessionID string, options *model.NextOptions) (string, error)
 	Project(ctx context.Context, name string) (*model.Project, error)
 	Projects(ctx context.Context) ([]string, error)
 	Session(ctx context.Context, sessionID string) (*model.Session, error)
+	GetAPIKeys(ctx context.Context) ([]*model.APIKey, error)
 }
 
 type executableSchema struct {
@@ -118,6 +130,39 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "ApiKey.expireAt":
+		if e.complexity.APIKey.ExpireAt == nil {
+			break
+		}
+
+		return e.complexity.APIKey.ExpireAt(childComplexity), true
+
+	case "ApiKey.id":
+		if e.complexity.APIKey.ID == nil {
+			break
+		}
+
+		return e.complexity.APIKey.ID(childComplexity), true
+
+	case "ApiKey.name":
+		if e.complexity.APIKey.Name == nil {
+			break
+		}
+
+		return e.complexity.APIKey.Name(childComplexity), true
+
+	case "Mutation.addApiKey":
+		if e.complexity.Mutation.AddAPIKey == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addApiKey_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddAPIKey(childComplexity, args["name"].(string), args["expireAt"].(int)), true
 
 	case "Mutation.addSession":
 		if e.complexity.Mutation.AddSession == nil {
@@ -142,6 +187,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ChangePassword(childComplexity, args["input"].(model.ChangePasswordInput)), true
+
+	case "Mutation.deleteApiKey":
+		if e.complexity.Mutation.DeleteAPIKey == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteApiKey_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteAPIKey(childComplexity, args["keyId"].(string)), true
 
 	case "Mutation.deleteProject":
 		if e.complexity.Mutation.DeleteProject == nil {
@@ -223,6 +280,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Project.Sessions(childComplexity), true
+
+	case "Query.getApiKeys":
+		if e.complexity.Query.GetAPIKeys == nil {
+			break
+		}
+
+		return e.complexity.Query.GetAPIKeys(childComplexity), true
 
 	case "Query.nextSpec":
 		if e.complexity.Query.NextSpec == nil {
@@ -467,11 +531,18 @@ type Spec {
   assignedTo: String!
 }
 
+type ApiKey {
+  id: String!
+  name: String!
+  expireAt: Int!
+}
+
 type Query {
   nextSpec(sessionId: String!, options: NextOptions): String!
   project(name: String!): Project!
   projects: [String!]!
   session(sessionId: String!): Session!
+  getApiKeys: [ApiKey!]!
 }
 
 type Mutation {
@@ -482,6 +553,8 @@ type Mutation {
   shareProject(email: String!, projectName: String!): String!
   deleteSession(sessionId: String!): String!
   deleteProject(projectName: String!): String!
+  addApiKey(name: String!, expireAt: Int!): String!
+  deleteApiKey(keyId: String!): String!
 }
 
 schema {
@@ -495,6 +568,30 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Mutation_addApiKey_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg0
+	var arg1 int
+	if tmp, ok := rawArgs["expireAt"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("expireAt"))
+		arg1, err = ec.unmarshalNInt2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["expireAt"] = arg1
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_addSession_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -523,6 +620,21 @@ func (ec *executionContext) field_Mutation_changePassword_args(ctx context.Conte
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteApiKey_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["keyId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyId"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["keyId"] = arg0
 	return args, nil
 }
 
@@ -716,6 +828,111 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _ApiKey_id(ctx context.Context, field graphql.CollectedField, obj *model.APIKey) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ApiKey",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ApiKey_name(ctx context.Context, field graphql.CollectedField, obj *model.APIKey) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ApiKey",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ApiKey_expireAt(ctx context.Context, field graphql.CollectedField, obj *model.APIKey) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ApiKey",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ExpireAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _Mutation_addSession(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
@@ -1011,6 +1228,90 @@ func (ec *executionContext) _Mutation_deleteProject(ctx context.Context, field g
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_addApiKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_addApiKey_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddAPIKey(rctx, args["name"].(string), args["expireAt"].(int))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteApiKey(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteApiKey_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteAPIKey(rctx, args["keyId"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Project_projectName(ctx context.Context, field graphql.CollectedField, obj *model.Project) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1269,6 +1570,41 @@ func (ec *executionContext) _Query_session(ctx context.Context, field graphql.Co
 	res := resTmp.(*model.Session)
 	fc.Result = res
 	return ec.marshalNSession2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐSession(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_getApiKeys(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().GetAPIKeys(rctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.APIKey)
+	fc.Result = res
+	return ec.marshalNApiKey2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐAPIKeyᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2994,6 +3330,43 @@ func (ec *executionContext) unmarshalInputUser(ctx context.Context, obj interfac
 
 // region    **************************** object.gotpl ****************************
 
+var apiKeyImplementors = []string{"ApiKey"}
+
+func (ec *executionContext) _ApiKey(ctx context.Context, sel ast.SelectionSet, obj *model.APIKey) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, apiKeyImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ApiKey")
+		case "id":
+			out.Values[i] = ec._ApiKey_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			out.Values[i] = ec._ApiKey_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "expireAt":
+			out.Values[i] = ec._ApiKey_expireAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -3041,6 +3414,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			}
 		case "deleteProject":
 			out.Values[i] = ec._Mutation_deleteProject(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "addApiKey":
+			out.Values[i] = ec._Mutation_addApiKey(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteApiKey":
+			out.Values[i] = ec._Mutation_deleteApiKey(ctx, field)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3152,6 +3535,20 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_session(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
+		case "getApiKeys":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_getApiKeys(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
@@ -3539,6 +3936,53 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) marshalNApiKey2ᚕᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐAPIKeyᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.APIKey) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNApiKey2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐAPIKey(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNApiKey2ᚖgithubᚗcomᚋShelexᚋsplitᚑspecsᚋapiᚋgraphᚋmodelᚐAPIKey(ctx context.Context, sel ast.SelectionSet, v *model.APIKey) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._ApiKey(ctx, sel, v)
+}
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)

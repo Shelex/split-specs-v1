@@ -49,3 +49,10 @@ type Spec struct {
 	Passed            bool   `datastore:"passed"`
 	AssignedTo        string `datastore:"assignedTo"`
 }
+
+type ApiKey struct {
+	ID       string `datastore:"id"`
+	UserID   string `datastore:"userId"`
+	Name     string `datastore:"name"`
+	ExpireAt int64  `datastore:"expireAt"`
+}

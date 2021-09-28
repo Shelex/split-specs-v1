@@ -39,9 +39,16 @@ type Storage interface {
 	CreateUser(user entities.User) error
 	GetUserByEmail(email string) (*entities.User, error)
 	UpdatePassword(userID string, newPassword string) error
+
+	//api keys
+	CreateApiKey(userID string, key entities.ApiKey) error
+	DeleteApiKey(userID string, keyID string) error
+	GetApiKeys(userID string) ([]entities.ApiKey, error)
+	GetApiKey(userID string, keyID string) (entities.ApiKey, error)
 }
 
 var ErrProjectNotFound = errors.New("project not found")
 var ErrSessionNotFound = errors.New("session not found")
 var ErrSpecNotFound = errors.New("spec not found")
 var ErrSessionFinished = errors.New("session already finished")
+var ErrApiKeyNotFound = errors.New("api key not found")

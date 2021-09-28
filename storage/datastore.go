@@ -18,6 +18,7 @@ const (
 	userProjectKind      = "user-project"
 	sessionKind          = "sessions"
 	specKind             = "specs"
+	apiKeyKind           = "api-keys"
 )
 
 type DataStore struct {
@@ -570,4 +571,64 @@ func (d DataStore) GetProjectSessions(projectID string) ([]entities.SessionWithS
 		sessions[index].Specs = specs
 	}
 	return sessions, nil
+}
+
+func (d DataStore) CreateApiKey(userID string, key entities.ApiKey) error {
+	userKey := datastore.NameKey(userKind, userID, nil)
+	apiNameKey := datastore.NameKey(apiKeyKind, key.ID, userKey)
+	_, err := d.Client.Put(d.ctx, apiNameKey, &key)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d DataStore) DeleteApiKey(userID string, keyID string) error {
+	_, err := d.GetApiKey(userID, keyID)
+
+	if err != nil {
+		return err
+	}
+
+	userKey := datastore.NameKey(userKind, userID, nil)
+
+	removeKey := datastore.NameKey(apiKeyKind, keyID, userKey)
+
+	return d.Client.Delete(d.ctx, removeKey)
+}
+
+func (d DataStore) GetApiKeys(userID string) ([]entities.ApiKey, error) {
+	userKey := datastore.NameKey(userKind, userID, nil)
+	apiKeyQuery := datastore.NewQuery(apiKeyKind).Ancestor(userKey)
+
+	var apiKeys []entities.ApiKey
+
+	if _, err := d.Client.GetAll(d.ctx, apiKeyQuery, &apiKeys); err != nil {
+		return nil, err
+	}
+
+	return apiKeys, nil
+}
+
+func (d DataStore) GetApiKey(userID string, keyID string) (entities.ApiKey, error) {
+	userKey := datastore.NameKey(userKind, userID, nil)
+	apiKeyQuery := datastore.NewQuery(apiKeyKind).Ancestor(userKey).Filter("id=", keyID).Limit(1)
+
+	var apiKeys []entities.ApiKey
+
+	empty := entities.ApiKey{}
+
+	if _, err := d.Client.GetAll(d.ctx, apiKeyQuery, &apiKeys); err != nil {
+		return empty, err
+	}
+
+	if len(apiKeys) == 0 {
+		return empty, ErrApiKeyNotFound
+	}
+
+	if apiKeys[0].UserID != userID {
+		return empty, ErrApiKeyNotFound
+	}
+
+	return apiKeys[0], nil
 }

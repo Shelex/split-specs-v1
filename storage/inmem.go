@@ -14,6 +14,7 @@ type InMem struct {
 	users        map[string]*entities.User
 	specs        map[string]*entities.Spec
 	userProjects map[string]*entities.UserProject
+	apiKeys      map[string]*entities.ApiKey
 }
 
 func NewInMemStorage() (Storage, error) {
@@ -23,6 +24,7 @@ func NewInMemStorage() (Storage, error) {
 		users:        map[string]*entities.User{},
 		specs:        map[string]*entities.Spec{},
 		userProjects: map[string]*entities.UserProject{},
+		apiKeys:      map[string]*entities.ApiKey{},
 	}
 	return DB, nil
 }
@@ -367,6 +369,51 @@ func (i *InMem) GetSessionWithSpecs(sessionID string) (entities.SessionWithSpecs
 		End:       session.End,
 		Specs:     specs,
 	}, nil
+}
+
+func (i *InMem) CreateApiKey(userID string, key entities.ApiKey) error {
+	_, ok := i.apiKeys[key.ID]
+	if ok {
+		return fmt.Errorf("api key with id %s already exist", key.ID)
+	}
+
+	i.apiKeys[key.ID] = &key
+
+	return nil
+}
+
+func (i *InMem) DeleteApiKey(userID string, keyID string) error {
+	_, ok := i.apiKeys[keyID]
+	if !ok {
+		return ErrApiKeyNotFound
+	}
+
+	delete(i.apiKeys, keyID)
+	return nil
+}
+
+func (i *InMem) GetApiKeys(userID string) ([]entities.ApiKey, error) {
+	var keys []entities.ApiKey
+
+	for _, key := range i.apiKeys {
+		if key.UserID == userID {
+			keys = append(keys, *key)
+		}
+	}
+
+	return keys, nil
+}
+
+func (i *InMem) GetApiKey(userID string, keyID string) (entities.ApiKey, error) {
+	var apiKey entities.ApiKey
+
+	for _, key := range i.apiKeys {
+		if key.ID == keyID {
+			apiKey = *key
+		}
+	}
+
+	return apiKey, nil
 }
 
 func contains(input []string, query string) (bool, int) {
