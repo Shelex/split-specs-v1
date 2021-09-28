@@ -22,16 +22,6 @@ const errorLink = onError(({ graphQLErrors, networkError, response }) => {
         }
         console.error(`[Network error]: ${networkError}`);
     }
-
-    if (graphQLErrors) {
-        graphQLErrors.map(({ message, path }) => {
-            if (!path.includes('nextSpec')) {
-            }
-            if (message.includes('access denied')) {
-                unsetToken();
-            }
-        });
-    }
 });
 
 const authLink = setContext((_, { headers }) => ({

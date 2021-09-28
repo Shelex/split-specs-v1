@@ -33,7 +33,7 @@ export const EmulateSession = ({ session }) => {
             nextFetchPolicy: 'no-cache'
         });
 
-    const onNextSpec = (machineId) => async (e) => {
+    const onNextSpec = (machineId) => (e) => {
         e.preventDefault();
         const options = {
             variables: {
@@ -49,18 +49,15 @@ export const EmulateSession = ({ session }) => {
             ...prev,
             nextSpec: values?.nextSpec
         }));
-
-        await new Promise((resolve) =>
-            setTimeout(() => {
-                refetchSession({
-                    variables: {
-                        id: sessionId
-                    }
-                });
-                resolve();
-            }, 500)
-        );
     };
+
+    if (nextSpecLoading) {
+        refetchSession({
+            variables: {
+                id: sessionId
+            }
+        });
+    }
 
     return (
         <div className="max-w-6xl px-4 mx-auto">

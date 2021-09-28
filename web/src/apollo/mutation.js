@@ -33,6 +33,18 @@ export const CREATE_SESSION = gql`
     }
 `;
 
+export const CREATE_API_KEY = gql`
+    mutation addApiKey($name: String!, $expireAt: Int!) {
+        addApiKey(name: $name, expireAt: $expireAt)
+    }
+`;
+
+export const DELETE_API_KEY = gql`
+    mutation deleteApiKey($keyId: String!) {
+        deleteApiKey(keyId: $keyId)
+    }
+`;
+
 // TODO:
 //   changePassword(input: ChangePasswordInput!): String!
 //   shareProject(email: String!, projectName: String!): String!

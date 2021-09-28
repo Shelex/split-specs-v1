@@ -49,3 +49,13 @@ export const NEXT_SPEC = gql`
         nextSpec(sessionId: $sessionId, options: $options)
     }
 `;
+
+export const API_KEYS = gql`
+    query {
+        getApiKeys {
+            id
+            name
+            expireAt
+        }
+    }
+`;

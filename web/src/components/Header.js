@@ -6,7 +6,13 @@ import Logout from './Logout';
 import Menu from './Menu';
 import Nav from './Nav';
 
-const menuItems = [{ name: 'Emulate Session', link: 'emulate' }];
+const menuItems = [
+    { name: 'Emulate Session', link: 'emulate' },
+    {
+        name: 'API Keys',
+        link: 'apiKeys'
+    }
+];
 
 const Header = ({ title }) => {
     const [isMenu, setIsMenu] = useState(false);

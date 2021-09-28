@@ -11,6 +11,8 @@ import Project from './project';
 import Session from './session';
 import Spec from './spec';
 import Emulate from './emulate';
+import ApiKeys from './apiKeys';
+import CreateApiKey from './createApiKey';
 
 const Index = () => {
     const isLoggedIn = useReactiveVar(isLoggedInVar);
@@ -31,6 +33,8 @@ const Index = () => {
                             component={Session}
                         />
                         <Route path="/emulate" component={Emulate} />
+                        <Route path="/apiKeys" component={ApiKeys} />
+                        <Route path="/createApiKey" component={CreateApiKey} />
                     </>
                 ) : (
                     <Redirect to="/" />
