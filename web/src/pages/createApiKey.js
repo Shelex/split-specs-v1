@@ -1,6 +1,5 @@
-import { memo, useEffect } from 'react';
+import { memo } from 'react';
 import ApiKeyForm from '../components/CreateApiKeyForm';
-import { Link } from 'react-router-dom';
 
 const CreateApiKey = () => {
     return (

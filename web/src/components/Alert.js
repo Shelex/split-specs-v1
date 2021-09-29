@@ -8,7 +8,7 @@ const ClosingAlert = ({ message }) => {
     }, 10000);
 
     return (
-        <>
+        <div>
             {showAlert ? (
                 <div
                     className={`text-white px-6 py-4 border-0 rounded relative mb-4 bg-red-400`}
@@ -28,7 +28,7 @@ const ClosingAlert = ({ message }) => {
                     </button>
                 </div>
             ) : null}
-        </>
+        </div>
     );
 };
 

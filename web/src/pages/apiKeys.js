@@ -1,41 +1,47 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
 import { DELETE_API_KEY } from '../apollo/mutation';
 import { API_KEYS } from '../apollo/query';
 import { displayTimestamp } from '../format/displayDate';
 import Loading from '../components/Loading';
+import Spinner from '../components/Spinner';
 import Alert from '../components/Alert';
 
 const ApiKeys = () => {
     const { data, loading, error, refetch } = useQuery(API_KEYS, {
-        fetchPolicy: 'network-only'
+        fetchPolicy: 'network-only',
+        nextFetchPolicy: 'no-cache'
     });
+
+    const [deletionKeyId, setDeletionKey] = useState();
 
     const currentDate = new Date();
 
     const currentTimestamp = currentDate.valueOf() / 1000;
 
-    let [
-        deleteApiKey,
-        { data: deleteData, loading: deleteLoading, error: deleteError }
-    ] = useMutation(DELETE_API_KEY);
+    const [deleteApiKey, { loading: deleteLoading, error: deleteError }] =
+        useMutation(DELETE_API_KEY);
 
     const onDelete = useCallback(
-        (e) => {
+        async (e) => {
+            setDeletionKey(e.target.value);
             e.preventDefault();
             deleteApiKey({
                 variables: {
                     keyId: e.target.value
                 }
             });
+
+            await new Promise((resolve) =>
+                setTimeout(() => {
+                    refetch();
+                    resolve();
+                }, 400)
+            );
         },
         [deleteApiKey]
     );
-
-    if (deleteLoading) {
-        refetch();
-    }
 
     return (
         <div className="h-full pt-4 sm:pt-12">
@@ -45,7 +51,7 @@ const ApiKeys = () => {
                 <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-8 my-4 rounded">
                     <Link to={`/createApiKey`}>Create api key</Link>
                 </button>
-                {loading || deleteLoading ? (
+                {loading ? (
                     <Loading />
                 ) : data?.getApiKeys.length > 0 ? (
                     <table className="table-auto border-collapse border border-blue-400 w-full">
@@ -91,7 +97,8 @@ const ApiKeys = () => {
                                             onClick={onDelete}
                                             value={apiKey.id}
                                         >
-                                            {deleteLoading ? (
+                                            {deleteLoading &&
+                                            deletionKeyId === apiKey.id ? (
                                                 <Spinner />
                                             ) : (
                                                 `Delete`

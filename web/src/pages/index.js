@@ -24,7 +24,7 @@ const Index = () => {
                 <Route exact path="/signup" component={SignUp} />
 
                 {isLoggedIn ? (
-                    <>
+                    <div>
                         <Route path="/projects/" component={Projects} />
                         <Route path="/project/:name" component={Project} />
                         <Route path="/spec/:name/:file" component={Spec} />
@@ -35,7 +35,7 @@ const Index = () => {
                         <Route path="/emulate" component={Emulate} />
                         <Route path="/apiKeys" component={ApiKeys} />
                         <Route path="/createApiKey" component={CreateApiKey} />
-                    </>
+                    </div>
                 ) : (
                     <Redirect to="/" />
                 )}
