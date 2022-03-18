@@ -2,6 +2,7 @@ import { memo } from 'react';
 import { useQuery } from '@apollo/client';
 import { Link, useParams } from 'react-router-dom';
 import { secondsToDuration, displayTimestamp } from '../format/displayDate';
+import { defineSpecStatusTextAndColor } from '../format/specStatus';
 import Loading from '../components/Loading';
 import Alert from '../components/Alert';
 import { GET_PROJECT } from '../apollo/query';
@@ -77,41 +78,57 @@ const Spec = () => {
                             </th>
                             <th className="w-1/6 border border-blue-400">
                                 <span className="text-gray-100 font-semibold">
+                                    Status
+                                </span>
+                            </th>
+                            <th className="w-1/6 border border-blue-400">
+                                <span className="text-gray-100 font-semibold">
                                     Duration/Session, %
                                 </span>
                             </th>
                         </tr>
                     </thead>
                     <tbody className="bg-gray-200">
-                        {specFileHistory.map((stat) => (
-                            <tr key={stat.sessionId} className="bg-white">
-                                <td className="font-semibold border border-blue-400">
-                                    <Link
-                                        to={`/session/${name}/${stat.sessionId}`}
+                        {specFileHistory.map((stat) => {
+                            const [statusText, bgColor] =
+                                defineSpecStatusTextAndColor(stat);
+                            return (
+                                <tr key={stat.sessionId} className="bg-white">
+                                    <td className="font-semibold border border-blue-400">
+                                        <Link
+                                            to={`/session/${name}/${stat.sessionId}`}
+                                        >
+                                            {stat.sessionId}
+                                        </Link>
+                                    </td>
+                                    <td className="border border-blue-400">
+                                        {displayTimestamp(stat.start)}
+                                    </td>
+                                    <td className="border border-blue-400">
+                                        {displayTimestamp(stat.end)}
+                                    </td>
+                                    <td className="border border-blue-400">
+                                        {secondsToDuration(
+                                            stat.estimatedDuration
+                                        )}
+                                    </td>
+                                    <td
+                                        className={`border border-blue-400 bg-${bgColor}`}
                                     >
-                                        {stat.sessionId}
-                                    </Link>
-                                </td>
-                                <td className="border border-blue-400">
-                                    {displayTimestamp(stat.start)}
-                                </td>
-                                <td className="border border-blue-400">
-                                    {displayTimestamp(stat.end)}
-                                </td>
-                                <td className="border border-blue-400">
-                                    {secondsToDuration(stat.estimatedDuration)}
-                                </td>
-                                <td className="border border-blue-400">
-                                    {(
-                                        (stat.estimatedDuration /
-                                            (stat.sessionEnd -
-                                                stat.sessionStart)) *
-                                        100
-                                    ).toFixed(2)}{' '}
-                                    %
-                                </td>
-                            </tr>
-                        ))}
+                                        {statusText}
+                                    </td>
+                                    <td className="border border-blue-400">
+                                        {(
+                                            (stat.estimatedDuration /
+                                                (stat.sessionEnd -
+                                                    stat.sessionStart)) *
+                                            100
+                                        ).toFixed(2)}{' '}
+                                        %
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             )}

@@ -39,6 +39,7 @@ export const GET_SESSION = gql`
                 assignedTo
                 start
                 end
+                passed
             }
         }
     }

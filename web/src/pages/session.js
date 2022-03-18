@@ -1,6 +1,7 @@
 import { memo, useCallback } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { displayTimestamp, secondsToDuration } from '../format/displayDate';
+import { defineSpecStatusTextAndColor } from '../format/specStatus';
 import Loading from '../components/Loading';
 import Alert from '../components/Alert';
 import { DeleteButton } from '../components/DeleteButton';
@@ -93,6 +94,11 @@ const Specs = (backlog, completed, projectName) => {
                             </th>
                             <th className="w-1/6 border border-blue-400">
                                 <span className="text-gray-100 font-semibold">
+                                    Status
+                                </span>
+                            </th>
+                            <th className="w-1/6 border border-blue-400">
+                                <span className="text-gray-100 font-semibold">
                                     Machine
                                 </span>
                             </th>
@@ -115,6 +121,7 @@ const Specs = (backlog, completed, projectName) => {
 };
 
 const Spec = (spec, projectName) => {
+    const [statusText, bgColor] = defineSpecStatusTextAndColor(spec);
     return (
         <tr key={spec.file} className="bg-white">
             <td className="font-semibold border border-blue-400">
@@ -126,6 +133,9 @@ const Spec = (spec, projectName) => {
             </td>
             <td className="border border-blue-400">
                 {secondsToDuration(spec.estimatedDuration)}
+            </td>
+            <td className={`border border-blue-400 bg-${bgColor}`}>
+                {statusText}
             </td>
             <td className="border border-blue-400">{spec.assignedTo}</td>
         </tr>
