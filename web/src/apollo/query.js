@@ -7,10 +7,11 @@ export const GET_PROJECTS = gql`
 `;
 
 export const GET_PROJECT = gql`
-    query project($name: String!) {
-        project(name: $name) {
+    query project($name: String!, $pagination: Pagination) {
+        project(name: $name, pagination: $pagination) {
             projectName
             latestSession
+            totalSessions
             sessions {
                 id
                 start
