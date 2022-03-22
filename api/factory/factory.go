@@ -72,3 +72,10 @@ func apiKeyToApi(apiKey entities.ApiKey) *model.APIKey {
 		ExpireAt: int(apiKey.ExpireAt),
 	}
 }
+
+func ApiPaginationToPagination(pagination *model.Pagination) *entities.Pagination {
+	return &entities.Pagination{
+		Limit:  pagination.Limit,
+		Offset: pagination.Offset,
+	}
+}

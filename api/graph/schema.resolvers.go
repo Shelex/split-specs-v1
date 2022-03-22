@@ -210,7 +210,7 @@ func (r *queryResolver) NextSpec(ctx context.Context, sessionID string, options 
 	return next, nil
 }
 
-func (r *queryResolver) Project(ctx context.Context, name string) (*model.Project, error) {
+func (r *queryResolver) Project(ctx context.Context, name string, pagination *model.Pagination) (*model.Project, error) {
 	user := auth.ForContext(ctx)
 	if user == nil {
 		return nil, &users.AccessDeniedError{}
@@ -226,7 +226,7 @@ func (r *queryResolver) Project(ctx context.Context, name string) (*model.Projec
 		return nil, err
 	}
 
-	sessions, err := r.SplitService.Repository.GetProjectSessions(projectID)
+	sessions, total, err := r.SplitService.Repository.GetProjectSessions(projectID, factory.ApiPaginationToPagination(pagination))
 	if err != nil {
 		return nil, err
 	}
@@ -235,6 +235,7 @@ func (r *queryResolver) Project(ctx context.Context, name string) (*model.Projec
 		ProjectName:   name,
 		LatestSession: &project.LatestSession,
 		Sessions:      factory.ProjectSessionsToApiSessions(sessions),
+		TotalSessions: total,
 	}, nil
 }
 

@@ -16,7 +16,7 @@ type Storage interface {
 	CreateProject(project entities.Project) error
 	AttachProjectToUser(userID string, projectID string) error
 	DeleteProject(email string, projectID string) error
-	GetProjectSessions(projectID string) ([]entities.SessionWithSpecs, error)
+	GetProjectSessions(projectID string, pagination *entities.Pagination) ([]entities.SessionWithSpecs, int, error)
 	GetProjectUsers(projectID string) ([]string, error)
 
 	GetSession(sessionID string) (entities.Session, error)

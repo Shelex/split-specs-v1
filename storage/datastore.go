@@ -506,7 +506,7 @@ func (d DataStore) DeleteProject(email string, projectID string) error {
 	}
 
 	if len(projectUsers) == 1 {
-		sessions, err := d.GetProjectSessions(projectID)
+		sessions, _, err := d.GetProjectSessions(projectID, nil)
 		if err != nil {
 			return err
 		}
@@ -550,13 +550,22 @@ func (d DataStore) GetSessionWithSpecs(sessionID string) (entities.SessionWithSp
 
 }
 
-func (d DataStore) GetProjectSessions(projectID string) ([]entities.SessionWithSpecs, error) {
+func (d DataStore) GetProjectSessions(projectID string, pagination *entities.Pagination) ([]entities.SessionWithSpecs, int, error) {
 	sessionQuery := datastore.NewQuery(sessionKind).Filter("projectId=", projectID)
+
+	total, err := d.Client.Count(d.ctx, sessionQuery)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	if pagination != nil {
+		sessionQuery = sessionQuery.Offset(pagination.Offset).Limit(pagination.Limit)
+	}
 
 	var sessions []entities.SessionWithSpecs
 
 	if _, err := d.Client.GetAll(d.ctx, sessionQuery, &sessions); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	for index, session := range sessions {
@@ -566,11 +575,11 @@ func (d DataStore) GetProjectSessions(projectID string) ([]entities.SessionWithS
 		var specs []entities.Spec
 
 		if _, err := d.Client.GetAll(d.ctx, specsQuery, &specs); err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		sessions[index].Specs = specs
 	}
-	return sessions, nil
+	return sessions, total, nil
 }
 
 func (d DataStore) CreateApiKey(userID string, key entities.ApiKey) error {

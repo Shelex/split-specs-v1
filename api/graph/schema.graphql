@@ -32,6 +32,7 @@ type Project {
   projectName: String!
   latestSession: String
   sessions: [Session!]
+  totalSessions: Int!
 }
 
 type Session {
@@ -39,6 +40,11 @@ type Session {
   start: Int!
   end: Int!
   backlog: [Spec!]
+}
+
+input Pagination {
+  limit: Int!
+  offset: Int!
 }
 
 type Spec {
@@ -58,7 +64,7 @@ type ApiKey {
 
 type Query {
   nextSpec(sessionId: String!, options: NextOptions): String!
-  project(name: String!): Project!
+  project(name: String!, pagination: Pagination): Project!
   projects: [String!]!
   session(sessionId: String!): Session!
   getApiKeys: [ApiKey!]!

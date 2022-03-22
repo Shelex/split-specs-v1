@@ -35,6 +35,7 @@ type Project struct {
 
 type ProjectFull struct {
 	Sessions      []SessionWithSpecs
+	TotalSessions int
 	LatestSession string
 }
 
@@ -55,4 +56,9 @@ type ApiKey struct {
 	UserID   string `datastore:"userId"`
 	Name     string `datastore:"name"`
 	ExpireAt int64  `datastore:"expireAt"`
+}
+
+type Pagination struct {
+	Limit  int
+	Offset int
 }

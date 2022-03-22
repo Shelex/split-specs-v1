@@ -147,7 +147,7 @@ func (i *InMem) CreateSession(projectID string, sessionID string, specs []entiti
 func (i *InMem) GetProjectLatestSessions(projectID string, limit int) ([]*entities.Session, error) {
 	var sessions []*entities.Session
 
-	projectSessions, err := i.GetProjectSessions(projectID)
+	projectSessions, _, err := i.GetProjectSessions(projectID, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +303,7 @@ func (i *InMem) DeleteProject(email string, projectID string) error {
 
 	// this is last user of this project so we can remove it completely
 	if len(users) == 1 {
-		projectSessions, err := i.GetProjectSessions(projectID)
+		projectSessions, _, err := i.GetProjectSessions(projectID, nil)
 		if err != nil {
 			return err
 		}
@@ -335,19 +335,19 @@ func (i *InMem) DeleteSession(email string, sessionID string) error {
 	return nil
 }
 
-func (i *InMem) GetProjectSessions(projectID string) ([]entities.SessionWithSpecs, error) {
+func (i *InMem) GetProjectSessions(projectID string, pagination *entities.Pagination) ([]entities.SessionWithSpecs, int, error) {
 	var sessions []entities.SessionWithSpecs
 	for _, session := range i.sessions {
 		if session.ProjectID == projectID {
 			sessionWithSpecs, err := i.GetSessionWithSpecs(session.ID)
 			if err != nil {
-				return sessions, err
+				return sessions, 0, err
 			}
 			sessions = append(sessions, sessionWithSpecs)
 		}
 	}
 
-	return sessions, nil
+	return sessions, len(sessions), nil
 }
 
 func (i *InMem) GetSessionWithSpecs(sessionID string) (entities.SessionWithSpecs, error) {

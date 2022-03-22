@@ -5,7 +5,7 @@ SHELL=/bin/bash
 
 .PHONY: gql
 gql:
-	cd api && rm -f generated.go models/*_gen.go &&\
+	cd api && go get github.com/99designs/gqlgen/cmd@v0.11.3 &&\
 	go run github.com/99designs/gqlgen generate
 
 .PHONY: build

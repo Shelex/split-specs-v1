@@ -18,10 +18,16 @@ type NextOptions struct {
 	PreviousPassed *bool   `json:"previousPassed"`
 }
 
+type Pagination struct {
+	Limit  int `json:"limit"`
+	Offset int `json:"offset"`
+}
+
 type Project struct {
 	ProjectName   string     `json:"projectName"`
 	LatestSession *string    `json:"latestSession"`
 	Sessions      []*Session `json:"sessions"`
+	TotalSessions int        `json:"totalSessions"`
 }
 
 type Session struct {
