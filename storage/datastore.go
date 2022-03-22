@@ -551,7 +551,7 @@ func (d DataStore) GetSessionWithSpecs(sessionID string) (entities.SessionWithSp
 }
 
 func (d DataStore) GetProjectSessions(projectID string, pagination *entities.Pagination) ([]entities.SessionWithSpecs, int, error) {
-	sessionQuery := datastore.NewQuery(sessionKind).Filter("projectId=", projectID)
+	sessionQuery := datastore.NewQuery(sessionKind).Filter("projectId=", projectID).Order("-end")
 
 	total, err := d.Client.Count(d.ctx, sessionQuery)
 	if err != nil {
