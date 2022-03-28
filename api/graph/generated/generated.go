@@ -62,7 +62,6 @@ type ComplexityRoot struct {
 	}
 
 	Project struct {
-		LatestSession func(childComplexity int) int
 		ProjectName   func(childComplexity int) int
 		Sessions      func(childComplexity int) int
 		TotalSessions func(childComplexity int) int
@@ -260,13 +259,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ShareProject(childComplexity, args["email"].(string), args["projectName"].(string)), true
-
-	case "Project.latestSession":
-		if e.complexity.Project.LatestSession == nil {
-			break
-		}
-
-		return e.complexity.Project.LatestSession(childComplexity), true
 
 	case "Project.projectName":
 		if e.complexity.Project.ProjectName == nil {
@@ -519,7 +511,6 @@ type SessionInfo {
 
 type Project {
   projectName: String!
-  latestSession: String
   sessions: [Session!]
   totalSessions: Int!
 }
@@ -1336,37 +1327,6 @@ func (ec *executionContext) _Project_projectName(ctx context.Context, field grap
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Project_latestSession(ctx context.Context, field graphql.CollectedField, obj *model.Project) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Project",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LatestSession, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Project_sessions(ctx context.Context, field graphql.CollectedField, obj *model.Project) (ret graphql.Marshaler) {
@@ -3430,8 +3390,6 @@ func (ec *executionContext) _Project(ctx context.Context, sel ast.SelectionSet, 
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "latestSession":
-			out.Values[i] = ec._Project_latestSession(ctx, field, obj)
 		case "sessions":
 			out.Values[i] = ec._Project_sessions(ctx, field, obj)
 		case "totalSessions":

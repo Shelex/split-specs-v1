@@ -41,9 +41,14 @@ const Project = () => {
         useMutation(DELETE_PROJECT);
 
     useEffect(() => {
-        setItemCount(data?.project?.totalSessions);
+        if (!data) {
+            return;
+        }
+        const itemCount = data?.project?.totalSessions;
+        setItemCount(itemCount);
         setPageCount(Math.ceil(itemCount / itemsPerPage));
-    }, [itemCount, pageCount]);
+        setItemOffset((currentPage * itemsPerPage) % itemCount);
+    });
 
     const onDelete = useCallback(
         (e) => {

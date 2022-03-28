@@ -10,7 +10,6 @@ export const GET_PROJECT = gql`
     query project($name: String!, $pagination: Pagination) {
         project(name: $name, pagination: $pagination) {
             projectName
-            latestSession
             totalSessions
             sessions {
                 id

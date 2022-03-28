@@ -221,11 +221,6 @@ func (r *queryResolver) Project(ctx context.Context, name string, pagination *mo
 		return nil, err
 	}
 
-	project, err := r.SplitService.Repository.GetProjectByID(projectID)
-	if err != nil {
-		return nil, err
-	}
-
 	sessions, total, err := r.SplitService.Repository.GetProjectSessions(projectID, factory.ApiPaginationToPagination(pagination))
 	if err != nil {
 		return nil, err
@@ -233,7 +228,6 @@ func (r *queryResolver) Project(ctx context.Context, name string, pagination *mo
 
 	return &model.Project{
 		ProjectName:   name,
-		LatestSession: &project.LatestSession,
 		Sessions:      factory.ProjectSessionsToApiSessions(sessions),
 		TotalSessions: total,
 	}, nil

@@ -168,29 +168,6 @@ func (i *InMem) GetProjectLatestSessions(projectID string, limit int) ([]*entiti
 	return sessions, nil
 }
 
-func (i *InMem) GetProjectLatestSession(projectID string) (*entities.Session, error) {
-	project, ok := i.projects[projectID]
-	if !ok {
-		return nil, ErrProjectNotFound
-	}
-
-	latestSession, ok := i.sessions[project.LatestSession]
-	if !ok {
-		return nil, fmt.Errorf("latest session for project %s not found", projectID)
-	}
-
-	return latestSession, nil
-}
-
-func (i *InMem) SetProjectLatestSession(projectID string, sessionID string) error {
-	_, ok := i.projects[projectID]
-	if !ok {
-		return ErrProjectNotFound
-	}
-	i.projects[projectID].LatestSession = sessionID
-	return nil
-}
-
 func (i *InMem) GetSession(sessionID string) (entities.Session, error) {
 	var empty entities.Session
 	session, ok := i.sessions[sessionID]
@@ -239,17 +216,7 @@ func (i *InMem) EndSpec(sessionID string, machineID string, isPassed bool) error
 }
 
 func (i *InMem) EndSession(sessionID string) error {
-	session, err := i.GetSession(sessionID)
-	if err != nil {
-		return err
-	}
-
 	i.sessions[sessionID].End = time.Now().Unix()
-
-	if err := i.SetProjectLatestSession(session.ProjectID, sessionID); err != nil {
-		return err
-	}
-
 	return nil
 }
 

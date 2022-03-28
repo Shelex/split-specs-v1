@@ -83,39 +83,6 @@ func (d DataStore) GetProjectLatestSessions(projectID string, limit int) ([]*ent
 	return sessions, nil
 }
 
-func (d DataStore) GetProjectLatestSession(projectID string) (*entities.Session, error) {
-	project, err := d.GetProjectByID(projectID)
-	if err != nil {
-		return nil, err
-	}
-
-	if project.LatestSession == "" {
-		return nil, ErrSessionNotFound
-	}
-
-	session, err := d.GetSession(project.LatestSession)
-	if err != nil {
-		return nil, err
-	}
-	return &session, nil
-}
-
-func (d DataStore) SetProjectLatestSession(projectID string, sessionID string) error {
-	project, err := d.GetProjectByID(projectID)
-	if err != nil {
-		return err
-	}
-
-	project.LatestSession = sessionID
-
-	projectKey := datastore.NameKey(projectKind, projectID, nil)
-
-	if _, err := d.Client.Put(d.ctx, projectKey, project); err != nil {
-		return err
-	}
-	return nil
-}
-
 func (d DataStore) StartSpec(sessionID string, machineID string, specID string) error {
 	session, err := d.GetSession(sessionID)
 	if err != nil {
@@ -227,7 +194,7 @@ func (d DataStore) EndSession(sessionID string) error {
 	if _, err := d.Client.Put(d.ctx, sessionKey, &session); err != nil {
 		return err
 	}
-	return d.SetProjectLatestSession(session.ProjectID, sessionID)
+	return nil
 }
 
 func (d DataStore) CreateUser(user entities.User) error {

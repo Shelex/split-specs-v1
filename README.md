@@ -90,7 +90,6 @@ query {
 query {
   project(name: "test") {
     projectName
-    latestSession
     sessions {
       id
       start

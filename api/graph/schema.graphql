@@ -30,7 +30,6 @@ type SessionInfo {
 
 type Project {
   projectName: String!
-  latestSession: String
   sessions: [Session!]
   totalSessions: Int!
 }

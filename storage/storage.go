@@ -26,8 +26,6 @@ type Storage interface {
 	DeleteSession(email string, sessionID string) error
 
 	GetProjectLatestSessions(projectID string, limit int) ([]*entities.Session, error)
-	GetProjectLatestSession(projectID string) (*entities.Session, error)
-	SetProjectLatestSession(projectName string, sessionID string) error
 
 	CreateSpecs(sessionID string, specs []entities.Spec) error
 	GetSpec(specID string) (entities.Spec, error)

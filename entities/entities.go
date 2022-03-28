@@ -28,9 +28,8 @@ type SessionWithSpecs struct {
 }
 
 type Project struct {
-	ID            string `datastore:"id"`
-	Name          string `datastore:"name"`
-	LatestSession string `datastore:"latestSession"`
+	ID   string `datastore:"id"`
+	Name string `datastore:"name"`
 }
 
 type ProjectFull struct {

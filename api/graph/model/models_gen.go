@@ -25,7 +25,6 @@ type Pagination struct {
 
 type Project struct {
 	ProjectName   string     `json:"projectName"`
-	LatestSession *string    `json:"latestSession"`
 	Sessions      []*Session `json:"sessions"`
 	TotalSessions int        `json:"totalSessions"`
 }
